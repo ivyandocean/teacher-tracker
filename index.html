@@ -457,13 +457,27 @@ function renderGradesInPlace(){
   body.innerHTML=html;
 }
 function openCompAssigns(gid,tid,subj,comp){S.gradesGroup=gid;S.gradesTerm=tid;S.gradesSubject=subj;renderGradesInPlace()}
-function openNewAssign(gid,tid,subj,comp){S.sheet={type:'new-assign',gid,tid,subj,comp,name:'',date:todayStr(),possible:''};renderSheet()}
+function openNewAssign(gid,tid,subj,comp){S.sheet={type:'new-assign',gid,tid,subj,comp,name:'',date:todayStr(),possible:'',scope:'single',copyFrom:''};renderSheet()}
 function saveNewAssign(){
   const sh=S.sheet;
-  if(!sh.name.trim()||!sh.possible||isNaN(parseFloat(sh.possible))||parseFloat(sh.possible)<=0){alert('Please fill in all fields');return}
-  const a={id:'ga'+Date.now(),groupId:sh.gid,termId:sh.tid,subj:sh.subj,comp:sh.comp,name:sh.name.trim(),date:sh.date,possible:parseFloat(sh.possible)};
-  S.gassign.push(a);save();S.currentAssign=a.id;S.gradesGroup=sh.gid;S.gradesTerm=sh.tid;S.gradesSubject=sh.subj;
-  closeSheet();S.section='grade-entry';render();
+  if(!sh.name.trim()||!sh.possible||isNaN(parseFloat(sh.possible))||parseFloat(sh.possible)<=0){showToast('Fill in all fields');return}
+  const base={termId:sh.tid,subj:sh.subj,comp:sh.comp,name:sh.name.trim(),date:sh.date,possible:parseFloat(sh.possible)};
+  if(sh.scope==='all'){
+    S.groups.forEach(g=>{
+      S.gassign.push({...base,id:'ga'+Date.now()+g.id,groupId:g.id});
+    });
+    save();closeSheet();S.section='records';render();
+  } else {
+    const a={...base,id:'ga'+Date.now(),groupId:sh.gid};
+    S.gassign.push(a);save();S.currentAssign=a.id;S.gradesGroup=sh.gid;S.gradesTerm=sh.tid;S.gradesSubject=sh.subj;
+    closeSheet();S.section='grade-entry';render();
+  }
+}
+function copyAssignFrom(srcId){
+  const sh=S.sheet;
+  const src=S.gassign.find(x=>x.id===srcId);if(!src)return;
+  sh.name=src.name;sh.possible=src.possible;sh.date=src.date;sh.copyFrom=srcId;
+  renderSheet();
 }
 function renderGradeEntry(c){
   const a=S.gassign.find(x=>x.id===S.currentAssign);
@@ -483,12 +497,14 @@ function renderGradeEntry(c){
       const ex=getScore(s.id,a.id);
       const val=window._ge[s.id]!==undefined?window._ge[s.id]:(ex?String(ex.scored):'');
       const pct=val!==''&&!isNaN(parseFloat(val))?parseFloat(val)/a.possible*100:null;
-      return`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)">
+      return`<div id="gr-${s.id}" style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);transition:background .15s">
         <div class="avatar" style="width:36px;height:36px;font-size:12px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div>
         <div style="flex:1;font-size:13px;font-weight:500">${s.name}${s.iep?` <span style="font-size:10px;color:var(--amber)">IEP</span>`:''}</div>
         <input type="number" min="0" max="${a.possible}" step="0.5" value="${val}" placeholder="—"
           style="width:64px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 8px;color:var(--text);font-size:14px;text-align:center;outline:none"
-          id="gi-${s.id}">
+          id="gi-${s.id}"
+          onfocus="document.getElementById('gr-${s.id}').style.background='var(--blue-bg)'"
+          onblur="document.getElementById('gr-${s.id}').style.background=''">
         <div style="width:40px;text-align:center" id="gp-${s.id}">${pct!==null?levelBadge(pctToLevel(pct)):''}</div>
       </div>`;
     }).join('')}
@@ -1492,7 +1508,37 @@ function renderSheet(){
       ${sh.blocks.map((b,i)=>`<div class="form-group" style="display:flex;align-items:center;gap:10px"><label class="form-label" style="width:60px;margin-bottom:0">Block ${i+1}</label><input class="form-input" value="${b}" placeholder="e.g. 8:00" oninput="S.sheet.blocks[${i}]=this.value" style="flex:1"><button onclick="S.sheet.blocks.splice(${i},1);renderSheet()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:0 4px">×</button></div>`).join('')}
     </div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveBlocks()">Save</button></div>`;
   } else if(sh.type==='new-assign'){
-    body=`<div class="sheet-handle"></div><div class="sheet-header">New Assignment</div><div class="sheet-body"><div class="form-group"><label class="form-label">Name</label><input class="form-input" placeholder="e.g. Quiz 3" oninput="S.sheet.name=this.value" value="${sh.name}"></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" value="${sh.date}" onchange="S.sheet.date=this.value"></div><div class="form-group"><label class="form-label">Points Possible</label><input class="form-input" type="number" min="1" placeholder="e.g. 20" oninput="S.sheet.possible=this.value" value="${sh.possible}" style="width:140px"></div><div style="font-size:12px;color:var(--text3)">After saving you'll enter scores for all students at once.</div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveNewAssign()">Save & Enter Grades</button></div>`;
+    const otherGroups=S.groups.filter(g=>g.id!==sh.gid);
+    const otherAssigns=S.gassign.filter(a=>a.groupId!==sh.gid&&a.subj===sh.subj&&a.comp===sh.comp&&a.termId===sh.tid);
+    const curGroup=S.groups.find(g=>g.id===sh.gid);
+    body=`<div class="sheet-handle"></div>
+    <div class="sheet-header">New Assignment</div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" placeholder="e.g. Quiz 3" oninput="S.sheet.name=this.value" value="${sh.name}"></div>
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" value="${sh.date}" onchange="S.sheet.date=this.value"></div>
+      <div class="form-group"><label class="form-label">Points Possible</label><input class="form-input" type="number" min="1" placeholder="e.g. 20" oninput="S.sheet.possible=this.value" value="${sh.possible}" style="width:140px"></div>
+      <div class="form-group">
+        <label class="form-label">Create for</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-sm ${sh.scope==='single'?'btn-primary':'btn-secondary'}" onclick="S.sheet.scope='single';renderSheet()" style="text-align:left">This group only (${curGroup?.name||''})</button>
+          <button class="btn btn-sm ${sh.scope==='all'?'btn-primary':'btn-secondary'}" onclick="S.sheet.scope='all';renderSheet()" style="text-align:left">All groups</button>
+        </div>
+      </div>
+      ${otherAssigns.length?`<div class="form-group">
+        <label class="form-label">Copy from another group</label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${[...new Map(otherAssigns.map(a=>[a.name+a.possible,a])).values()].map(a=>{
+            const g=S.groups.find(x=>x.id===a.groupId);
+            return`<button class="btn btn-sm btn-secondary" onclick="copyAssignFrom('${a.id}')" style="text-align:left;display:flex;justify-content:space-between">
+              <span>${a.name}</span>
+              <span style="color:var(--text3);font-weight:400">/${a.possible} · ${g?.name||''}</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>`:''}
+      <div style="font-size:12px;color:var(--text3)">${sh.scope==='all'?'This assignment will be added to all groups. You can enter grades for each group separately.':'After saving you\'ll enter scores for all students at once.'}</div>
+    </div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveNewAssign()">${sh.scope==='all'?'Add to All Groups':'Save & Enter Grades'}</button></div>`;
   } else if(sh.type==='add-assignment'){
     body=`<div class="sheet-handle"></div><div class="sheet-header">New Assignment</div><div class="sheet-body"><div class="form-group"><label class="form-label">Title</label><input class="form-input" placeholder="e.g. Chapter 4 worksheet" oninput="S.sheet.title=this.value"></div><div class="form-group"><label class="form-label">Due Date (optional)</label><input class="form-input" type="date" onchange="S.sheet.due=this.value"></div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveAssignment()">Add</button></div>`;
   } else if(sh.type==='add-contact'){
