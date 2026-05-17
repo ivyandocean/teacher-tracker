@@ -166,6 +166,8 @@ const S={
   students:JSON.parse(localStorage.getItem('tt_students')||'[]'),
   attendance:JSON.parse(localStorage.getItem('tt_attendance')||'{}'),
   participation:JSON.parse(localStorage.getItem('tt_participation')||'{}'),
+  partSessions:JSON.parse(localStorage.getItem('tt_partsess')||'[]'),
+  activePartSession:null,
   behavior:JSON.parse(localStorage.getItem('tt_behavior')||'[]'),
   behaviorTags:JSON.parse(localStorage.getItem('tt_btags')||'null')||[
     {id:'bt1',label:'On Task',type:'pos'},{id:'bt2',label:'Great Effort',type:'pos'},{id:'bt3',label:'Helpful',type:'pos'},{id:'bt4',label:'Positive Attitude',type:'pos'},{id:'bt5',label:'Strong Participation',type:'pos'},
@@ -207,7 +209,7 @@ function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-').map(Number);return`
 function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',hour12:true})}
 function offsetDate(s,days){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+days);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function save(){
-  const map={groups:'tt_groups',students:'tt_students',attendance:'tt_attendance',participation:'tt_participation',behavior:'tt_behavior',behaviorTags:'tt_btags',todos:'tt_todos',grades:'tt_grades',gassign:'tt_gassign',rubric:'tt_rubric',terms:'tt_terms',checklist:'tt_checklist',assignments:'tt_assignments',contacts:'tt_contacts',schedule:'tt_schedule',schedBlocks:'tt_schedblocks',journal:'tt_journal',iepStrategies:'tt_iepstrats',schedImages:'tt_schedimgs',studentNotes:'tt_snotes',subNotes:'tt_subnotes',calNotes:'tt_calnotes'};
+  const map={groups:'tt_groups',students:'tt_students',attendance:'tt_attendance',participation:'tt_participation',partSessions:'tt_partsess',behavior:'tt_behavior',behaviorTags:'tt_btags',todos:'tt_todos',grades:'tt_grades',gassign:'tt_gassign',rubric:'tt_rubric',terms:'tt_terms',checklist:'tt_checklist',assignments:'tt_assignments',contacts:'tt_contacts',schedule:'tt_schedule',schedBlocks:'tt_schedblocks',journal:'tt_journal',iepStrategies:'tt_iepstrats',schedImages:'tt_schedimgs',studentNotes:'tt_snotes',subNotes:'tt_subnotes',calNotes:'tt_calnotes'};
   Object.entries(map).forEach(([k,v])=>localStorage.setItem(v,JSON.stringify(S[k])));
 }
 function getColor(id){return COLORS.find(c=>c.id===id)||COLORS[0]}
@@ -318,13 +320,153 @@ function renderAttBody(){
   <div class="card" style="margin-bottom:16px">${students.map(s=>{const cur=getAtt(s.id,gid,date);return`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)"><div class="avatar" style="width:36px;height:36px;font-size:12px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div style="flex:1;font-size:13px;font-weight:500">${s.name}</div><div class="att-btns">${sts.map(st=>`<button class="att-btn ${st.cls}${cur===st.id?' sel':''}" onclick="setAtt('${s.id}','${gid}','${S.attDate}','${st.id}')">${st.label}</button>`).join('')}</div></div>`;}).join('')}</div>`;
 }
 
-function getPart(sid,gid,date){return(S.participation[gid+'__'+date]||{})[sid]||{c:0,x:0}}
-function addPart(sid,gid,date,type){const k=gid+'__'+date;if(!S.participation[k])S.participation[k]={};if(!S.participation[k][sid])S.participation[k][sid]={c:0,x:0};S.participation[k][sid][type]++;save();const el=document.getElementById('pcard-'+sid);if(el){const p=getPart(sid,gid,date);el.querySelector('.part-tally').textContent=`${p.c}✓  ${p.x}✗`;el.querySelector('.part-check').classList.toggle('active',p.c>0);el.querySelector('.part-x').classList.toggle('active',p.x>0);}}
-function renderParticipation(body){const gid=activeGroup();body.innerHTML=groupTabsHTML(gid)+datBarHTML('partDate')+'<div id="part-body"></div>';renderPartBody()}
-function renderPartBody(){
-  const body=document.getElementById('part-body');if(!body)return;
-  const gid=activeGroup(),date=S.partDate;
-  body.innerHTML=`<div class="face-grid">${groupStudents(gid).map(s=>{const p=getPart(s.id,gid,date);return`<div class="face-card" id="pcard-${s.id}"><div class="face-avatar">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div class="face-name">${s.name.split(' ')[0]}</div><div class="part-btns"><button class="part-btn part-check${p.c>0?' active':''}" onclick="addPart('${s.id}','${gid}','${date}','c')">✓</button><button class="part-btn part-x${p.x>0?' active':''}" onclick="addPart('${s.id}','${gid}','${date}','x')">✗</button></div><div class="part-tally">${p.c}✓  ${p.x}✗</div></div>`;}).join('')}</div>`;
+// ── PARTICIPATION SESSIONS ───────────────────────────────
+function renderParticipation(body){
+  const gid=activeGroup();
+  const sess=S.activePartSession;
+  if(sess&&sess.gid===gid){
+    renderPartLive(body,gid,sess);
+  } else {
+    renderPartHome(body,gid);
+  }
+}
+
+function renderPartHome(body,gid){
+  const sessions=S.partSessions.filter(s=>s.gid===gid).sort((a,b)=>b.ts-a.ts);
+  body.innerHTML=`
+    ${groupTabsHTML(gid,'S.activeGroup=\'%ID%\';S.activePartSession=null;const b=document.getElementById(\'daily-body\');if(b)renderParticipation(b)')}
+    <div style="padding:12px 16px;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary btn-sm" onclick="openStartSession('${gid}')">+ Start Session</button>
+    </div>
+    ${sessions.length===0
+      ?`<div class="empty"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="empty-title">No sessions yet</div><div class="empty-sub">Start a session to begin tracking participation.</div></div>`
+      :`<div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:10px">
+          ${sessions.map(s=>{
+            const score=partScore(s);
+            return`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+              <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+                <div>
+                  <div style="font-size:14px;font-weight:600">${s.name}</div>
+                  <div style="font-size:12px;color:var(--text3)">${fmtDate(s.date)}</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button class="btn btn-sm btn-secondary" onclick="openSessionDetail('${s.id}')">View</button>
+                  <button onclick="deletePartSession('${s.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1;padding:0 4px">×</button>
+                </div>
+              </div>
+              <div style="display:flex;overflow-x:auto;padding:8px 12px;gap:8px">
+                ${groupStudents(gid).map(st=>{
+                  const t=s.tallies[st.id]||{c:0,x:0};
+                  const sc=Math.min(100,Math.max(0,75+t.c-t.x));
+                  return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:52px">
+                    <div class="avatar" style="width:36px;height:36px;font-size:12px">${st.photo?`<img src="${st.photo}">`:`<span>${initials(st.name)}</span>`}</div>
+                    <div style="font-size:10px;color:var(--text3)">${st.name.split(' ')[0]}</div>
+                    <div style="font-size:11px;font-weight:600;color:var(--blue)">${sc}</div>
+                    <div style="font-size:10px;color:var(--text3)">${t.c}✓ ${t.x}✗</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}`;
+}
+
+function renderPartLive(body,gid,sess){
+  const students=groupStudents(gid);
+  body.innerHTML=`
+    <div style="padding:10px 16px;background:var(--blue-bg);border-bottom:1px solid var(--blue);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--blue)">${sess.name}</div>
+        <div style="font-size:12px;color:var(--text3)">${fmtDate(sess.date)} · Live</div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="endPartSession()">End Session</button>
+    </div>
+    <div class="face-grid" id="part-live-grid">
+      ${students.map(s=>{
+        const t=sess.tallies[s.id]||{c:0,x:0};
+        const sc=Math.min(100,Math.max(0,75+t.c-t.x));
+        return`<div class="face-card" id="pcard-${s.id}">
+          <div class="face-avatar">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div>
+          <div class="face-name">${s.name.split(' ')[0]}</div>
+          <div class="part-btns">
+            <button class="part-btn part-check${t.c>0?' active':''}" onclick="partTap('${s.id}','c')">✓</button>
+            <button class="part-btn part-x${t.x>0?' active':''}" onclick="partTap('${s.id}','x')">✗</button>
+          </div>
+          <div class="part-tally" id="ptally-${s.id}">${t.c}✓ ${t.x}✗</div>
+          <div style="font-size:12px;font-weight:700;color:var(--blue)" id="pscore-${s.id}">${sc}/100</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function partTap(sid,type){
+  const sess=S.activePartSession;if(!sess)return;
+  if(!sess.tallies[sid])sess.tallies[sid]={c:0,x:0};
+  sess.tallies[sid][type]++;
+  const t=sess.tallies[sid];
+  const sc=Math.min(100,Math.max(0,75+t.c-t.x));
+  // Patch DOM
+  const el=document.getElementById('pcard-'+sid);
+  if(el){
+    el.querySelector('.part-tally').textContent=`${t.c}✓ ${t.x}✗`;
+    el.querySelector('.part-check').classList.toggle('active',t.c>0);
+    el.querySelector('.part-x').classList.toggle('active',t.x>0);
+    const sc_el=document.getElementById('pscore-'+sid);
+    if(sc_el)sc_el.textContent=sc+'/100';
+  }
+  // Save session state
+  const idx=S.partSessions.findIndex(s=>s.id===sess.id);
+  if(idx>-1)S.partSessions[idx]=sess;
+  save();
+}
+
+function openStartSession(gid){
+  S.sheet={type:'start-part-session',gid,name:'',date:todayStr()};renderSheet();
+}
+
+function saveStartSession(){
+  const sh=S.sheet;
+  if(!sh.name.trim()){showToast('Please enter a session name');return}
+  const sess={id:'ps'+Date.now(),gid:sh.gid,name:sh.name.trim(),date:sh.date,ts:Date.now(),tallies:{}};
+  S.partSessions.push(sess);
+  S.activePartSession=sess;
+  save();closeSheet();
+  const b=document.getElementById('daily-body');if(b)renderParticipation(b);
+}
+
+function endPartSession(){
+  S.activePartSession=null;
+  const b=document.getElementById('daily-body');if(b)renderParticipation(b);
+}
+
+function deletePartSession(id){
+  S.partSessions=S.partSessions.filter(s=>s.id!==id);
+  save();
+  const b=document.getElementById('daily-body');if(b)renderParticipation(b);
+}
+
+function partScore(sess){
+  return Object.fromEntries(Object.entries(sess.tallies).map(([sid,t])=>[sid,Math.min(100,Math.max(0,75+t.c-t.x))]));
+}
+
+function openSessionDetail(id){
+  const sess=S.partSessions.find(s=>s.id===id);if(!sess)return;
+  S.sheet={type:'part-session-detail',sess};renderSheet();
+}
+
+function saveSessionGrades(){
+  const sh=S.sheet,sess=sh.sess;
+  if(!sh.subj||!sh.comp||!sh.term){showToast('Select subject, component and term');return}
+  const students=groupStudents(sess.gid);
+  students.forEach(s=>{
+    const t=sess.tallies[s.id]||{c:0,x:0};
+    const sc=Math.min(100,Math.max(0,75+t.c-t.x));
+    // Find or create assignment
+    let a=S.gassign.find(x=>x.name===sess.name&&x.groupId===sess.gid&&x.termId===sh.term&&x.subj===sh.subj&&x.comp===sh.comp);
+    if(!a){a={id:'ga'+Date.now()+s.id,groupId:sess.gid,termId:sh.term,subj:sh.subj,comp:sh.comp,name:sess.name,date:sess.date,possible:100};S.gassign.push(a);}
+    S.grades[s.id+'__'+a.id]={scored:sc,aid:a.id,modified:false};
+  });
+  save();closeSheet();showToast('✓ Grades saved to Records');
 }
 
 function renderBehaviour(body){
@@ -753,7 +895,7 @@ function renderCalendar(body){
             const key=`${y}-${String(m+1).padStart(2,'0')}-${String(cell.d).padStart(2,'0')}`;
             const isToday=cell.d===td&&m===tm&&y===ty;
             const val=(S.calNotes[key]||'').replace(/</g,'&lt;');
-            return`<div style="border-right:1px solid var(--border);display:flex;flex-direction:column;${isToday?'background:var(--blue-bg);':''}">
+            return`<div style="border-right:1px solid var(--border);border-top:1px solid var(--border);display:flex;flex-direction:column;${isToday?'background:var(--blue-bg);':''}">
               <div style="padding:4px 6px;font-size:11px;font-weight:600;color:${isToday?'var(--blue)':'var(--text3)'}">${cell.d}</div>
               <textarea id="cal-${key}" style="flex:1;width:100%;min-height:60px;background:transparent;border:none;outline:none;resize:none;padding:2px 6px 6px;font-size:12px;color:var(--text);font-family:inherit;line-height:1.4" placeholder="…" oninput="saveCalNote('${key}',this.value)">${val}</textarea>
             </div>`;
@@ -1360,7 +1502,7 @@ function saveStudentNote(sid){
 
 // ── DATA MANAGEMENT ──────────────────────────────────────
 function exportData(){
-  const keys=['tt_groups','tt_students','tt_attendance','tt_participation','tt_behavior','tt_btags','tt_todos','tt_grades','tt_gassign','tt_rubric','tt_terms','tt_checklist','tt_assignments','tt_contacts','tt_schedule','tt_schedblocks','tt_journal','tt_iepstrats','tt_schedimgs','tt_snotes','tt_subnotes'];
+  const keys=['tt_groups','tt_students','tt_attendance','tt_participation','tt_partsess','tt_behavior','tt_btags','tt_todos','tt_grades','tt_gassign','tt_rubric','tt_terms','tt_checklist','tt_assignments','tt_contacts','tt_schedule','tt_schedblocks','tt_journal','tt_iepstrats','tt_schedimgs','tt_snotes','tt_subnotes'];
   const data={version:1,exported:new Date().toISOString(),data:{}};
   keys.forEach(k=>{const v=localStorage.getItem(k);if(v)data.data[k]=v});
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -1404,7 +1546,7 @@ function doNewSchoolYear(){
   // Keep: groups, rubric, terms, behaviorTags, iepStrategies, subNotes, schedImages, schedBlocks, schedule
   const keep=['tt_groups','tt_rubric','tt_terms','tt_btags','tt_iepstrats','tt_subnotes','tt_schedimgs','tt_schedblocks','tt_schedule'];
   // Clear: students and all per-student/daily data
-  const clear=['tt_students','tt_attendance','tt_participation','tt_behavior','tt_todos','tt_grades','tt_gassign','tt_checklist','tt_assignments','tt_contacts','tt_journal','tt_snotes'];
+  const clear=['tt_students','tt_attendance','tt_participation','tt_partsess','tt_behavior','tt_todos','tt_grades','tt_gassign','tt_checklist','tt_assignments','tt_contacts','tt_journal','tt_snotes'];
   clear.forEach(k=>localStorage.removeItem(k));
   showToast('✓ New year started — reloading...');
   setTimeout(()=>location.reload(),1200);
@@ -1569,6 +1711,46 @@ function renderSheet(){
       <button class="btn btn-secondary" onclick="closeSheet()">Cancel</button>
       <button class="btn btn-danger" onclick="closeSheet();doNewSchoolYear()">Start New Year</button>
     </div>`;
+  } else if(sh.type==='start-part-session'){
+    body=`<div class="sheet-handle"></div>
+    <div class="sheet-header">Start Session</div>
+    <div class="sheet-body">
+      <div class="form-group"><label class="form-label">Session Name</label><input class="form-input" placeholder="e.g. Math Discussion" oninput="S.sheet.name=this.value" value="${sh.name}" autofocus></div>
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" value="${sh.date}" onchange="S.sheet.date=this.value"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveStartSession()">Start</button></div>`;
+  } else if(sh.type==='part-session-detail'){
+    const sess=sh.sess;
+    const students=groupStudents(sess.gid);
+    if(!sh.subj)sh.subj=SUBJECTS[0].id;
+    if(!sh.comp)sh.comp=SUBJECTS[0].comps[0].id;
+    if(!sh.term)sh.term=S.terms[0]?.id||'';
+    const curSubj=SUBJECTS.find(x=>x.id===sh.subj);
+    body=`<div class="sheet-handle"></div>
+    <div class="sheet-header" style="display:flex;justify-content:space-between;align-items:center">
+      <span>${sess.name}</span><span style="font-size:12px;font-weight:400;color:var(--text3)">${fmtDate(sess.date)}</span>
+    </div>
+    <div class="sheet-body" style="padding:0">
+      <div style="padding:12px 20px;border-bottom:1px solid var(--border)">
+        ${students.map(s=>{
+          const t=sess.tallies[s.id]||{c:0,x:0};
+          const sc=Math.min(100,Math.max(0,75+t.c-t.x));
+          return`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div class="avatar" style="width:36px;height:36px;font-size:12px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div>
+            <div style="flex:1;font-size:14px;font-weight:500">${s.name}</div>
+            <div style="font-size:12px;color:var(--text3)">${t.c}✓ ${t.x}✗</div>
+            <div style="font-size:14px;font-weight:700;color:var(--blue);min-width:40px;text-align:right">${sc}/100</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Save grades to Records</div>
+        <div class="form-group"><label class="form-label">Term</label><select class="form-input" onchange="S.sheet.term=this.value">${S.terms.map(t=>`<option value="${t.id}" ${sh.term===t.id?'selected':''}>${t.label}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Subject</label><select class="form-input" onchange="S.sheet.subj=this.value;S.sheet.comp=SUBJECTS.find(x=>x.id===this.value).comps[0].id;renderSheet()">${SUBJECTS.map(s=>`<option value="${s.id}" ${sh.subj===s.id?'selected':''}>${s.label}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Component</label><select class="form-input" onchange="S.sheet.comp=this.value">${curSubj.comps.map(c=>`<option value="${c.id}" ${sh.comp===c.id?'selected':''}>${c.label}</option>`).join('')}</select></div>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Close</button><button class="btn btn-primary" onclick="saveSessionGrades()">Save Grades</button></div>`;
   } else if(sh.type==='rubric'){
     const levels=['5+','5','5-','4+','4','4-','3+','3','3-','2+','2','1'];
     body=`<div class="sheet-handle"></div><div class="sheet-header">Rubric Scale</div><div class="sheet-body"><div style="font-size:13px;color:var(--text3);margin-bottom:14px">Set the minimum % for each level.</div>${levels.map(l=>`<div class="form-group" style="display:flex;align-items:center;gap:12px">${levelBadge(l)}<input class="form-input" type="number" min="0" max="100" value="${S.rubric[l]??''}" oninput="S.rubric['${l}']=parseInt(this.value)||0;save()" style="width:90px"><span style="font-size:13px;color:var(--text3)">%</span></div>`).join('')}</div><div class="btn-row"><button class="btn btn-primary" onclick="closeSheet()">Done</button></div>`;
