@@ -17,17 +17,26 @@
 --purple:#7a5a90;--purple-bg:#ede0f3;
 --teal:#6ba292;--teal-bg:#ddf0eb;
 --coral:#cc8b86;--coral-bg:#faeae8;
---radius:12px;--radius-sm:8px;--nav-h:64px;
+--radius:12px;--radius-sm:8px;
 }
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden}
-#app{display:flex;flex-direction:column;min-height:100vh;max-width:600px;margin:0 auto}
-#content{flex:1;overflow-y:auto;padding:0 0 calc(var(--nav-h)+24px)}
-#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding:0 4px}
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:var(--radius-sm);border:none;background:none;color:var(--text3);cursor:pointer;transition:all .15s;flex:1;min-width:0}
-.nav-btn.active{color:var(--blue)}
-.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.nav-btn span{font-size:10px;font-weight:500;white-space:nowrap}
-.page-header{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:17px;min-height:100vh;overflow-x:hidden}
+#app{display:flex;flex-direction:column;min-height:100vh}
+#topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+#topbar-title{font-size:17px;font-weight:600;flex:1;color:var(--text)}
+#hamburger{width:36px;height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;border:none;background:none;flex-shrink:0;padding:4px}
+#hamburger span{display:block;width:20px;height:2px;background:var(--blue);border-radius:2px;transition:all .25s}
+#content{flex:1;overflow-y:auto;padding-bottom:32px}
+#drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:150;opacity:0;pointer-events:none;transition:opacity .25s}
+#drawer-overlay.open{opacity:1;pointer-events:all}
+#drawer{position:fixed;top:0;left:0;bottom:0;width:280px;background:var(--bg2);border-right:1px solid var(--border);z-index:160;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;max-width:85vw}
+#drawer.open{transform:translateX(0)}
+#drawer-header{padding:20px 20px 12px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
+#drawer nav{flex:1;padding:8px 0;overflow-y:auto}
+.drawer-btn{display:flex;align-items:center;gap:14px;padding:13px 20px;border:none;background:none;cursor:pointer;width:100%;text-align:left;color:var(--text2);font-size:15px;font-weight:400;border-left:3px solid transparent;transition:all .15s}
+.drawer-btn:active{background:var(--bg3)}
+.drawer-btn.active{color:var(--blue);font-weight:600;border-left-color:var(--blue);background:var(--blue-bg)}
+.drawer-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.page-header{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .page-title{font-size:20px;font-weight:600}
 .btn-icon{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--bg3);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .btn-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -64,7 +73,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .color-opt{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
 .color-opt.selected{border-color:#fff;transform:scale(1.1)}
 .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding-bottom:32px}
+.sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding-bottom:32px}
 .sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0}
 .sheet-header{padding:16px 20px;font-size:17px;font-weight:600;border-bottom:1px solid var(--border)}
 .sheet-body{padding:16px 20px}
@@ -148,15 +157,27 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 </style>
 </head>
 <body>
-<div id="app"><div id="content"></div>
-<nav id="nav">
-  <button class="nav-btn active" onclick="showSection('today')" id="nav-today"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Today</span></button>
-  <button class="nav-btn" onclick="showSection('daily')" id="nav-daily"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Daily</span></button>
-  <button class="nav-btn" onclick="showSection('records')" id="nav-records"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Records</span></button>
-  <button class="nav-btn" onclick="showSection('students')" id="nav-students"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>Students</span></button>
-  <button class="nav-btn" onclick="showSection('planning')" id="nav-planning"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Planning</span></button>
-  <button class="nav-btn" onclick="showSection('classes')" id="nav-classes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>Setup</span></button>
-</nav></div>
+<div id="app">
+<div id="topbar">
+  <button id="hamburger" onclick="toggleDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div id="topbar-title">Today</div>
+</div>
+<div id="content"></div>
+</div>
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <div id="drawer-header">Teacher Tracker</div>
+  <nav>
+    <button class="drawer-btn active" id="nav-today" onclick="drawerNav('today')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Today</button>
+    <button class="drawer-btn" id="nav-daily" onclick="drawerNav('daily')"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Daily</button>
+    <button class="drawer-btn" id="nav-records" onclick="drawerNav('records')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Records</button>
+    <button class="drawer-btn" id="nav-students" onclick="drawerNav('students')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Students</button>
+    <button class="drawer-btn" id="nav-planning" onclick="drawerNav('planning')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Planning</button>
+    <button class="drawer-btn" id="nav-classes" onclick="drawerNav('classes')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Setup</button>
+  </nav>
+</div>
 <script>
 const S={
   section:'today',
@@ -172,7 +193,7 @@ const S={
   todos:JSON.parse(localStorage.getItem('tt_todos')||'[]'),
   grades:JSON.parse(localStorage.getItem('tt_grades')||'{}'),
   gassign:JSON.parse(localStorage.getItem('tt_gassign')||'[]'),
-  rubric:JSON.parse(localStorage.getItem('tt_rubric')||'null')||{'1':0,'2':50,'2+':55,'3-':60,'3':65,'3+':70,'4-':75,'4':80,'4+':85,'5-':90,'5':95,'5+':100},
+  rubric:JSON.parse(localStorage.getItem('tt_rubric')||'null')||{'1':'','2':'','2+':'','3-':'','3':'','3+':'','4-':'','4':'','4+':'','5-':'','5':'','5+':''},
   terms:JSON.parse(localStorage.getItem('tt_terms')||'null')||[{id:'t1',label:'Term 1',start:'',end:''},{id:'t2',label:'Term 2',start:'',end:''},{id:'t3',label:'Term 3',start:'',end:''}],
   checklist:JSON.parse(localStorage.getItem('tt_checklist')||'{}'),
   assignments:JSON.parse(localStorage.getItem('tt_assignments')||'[]'),
@@ -184,6 +205,7 @@ const S={
   schedImages:JSON.parse(localStorage.getItem('tt_schedimgs')||'[]'),
   studentNotes:JSON.parse(localStorage.getItem('tt_snotes')||'{}'),
   subNotes:JSON.parse(localStorage.getItem('tt_subnotes')||'null')||null,
+  calNotes:JSON.parse(localStorage.getItem('tt_calnotes')||'{}'),
   iepStudent:null,
   sheet:null,editGroup:null,editStudent:null,
   dailyTab:'attendance',recordsTab:'grades',planTab:'schedule',
@@ -204,7 +226,7 @@ function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-').map(Number);return`
 function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',hour12:true})}
 function offsetDate(s,days){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+days);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function save(){
-  const map={groups:'tt_groups',students:'tt_students',attendance:'tt_attendance',participation:'tt_participation',behavior:'tt_behavior',behaviorTags:'tt_btags',todos:'tt_todos',grades:'tt_grades',gassign:'tt_gassign',rubric:'tt_rubric',terms:'tt_terms',checklist:'tt_checklist',assignments:'tt_assignments',contacts:'tt_contacts',schedule:'tt_schedule',schedBlocks:'tt_schedblocks',journal:'tt_journal',iepStrategies:'tt_iepstrats',schedImages:'tt_schedimgs',studentNotes:'tt_snotes',subNotes:'tt_subnotes'};
+  const map={groups:'tt_groups',students:'tt_students',attendance:'tt_attendance',participation:'tt_participation',behavior:'tt_behavior',behaviorTags:'tt_btags',todos:'tt_todos',grades:'tt_grades',gassign:'tt_gassign',rubric:'tt_rubric',terms:'tt_terms',checklist:'tt_checklist',assignments:'tt_assignments',contacts:'tt_contacts',schedule:'tt_schedule',schedBlocks:'tt_schedblocks',journal:'tt_journal',iepStrategies:'tt_iepstrats',schedImages:'tt_schedimgs',studentNotes:'tt_snotes',subNotes:'tt_subnotes',calNotes:'tt_calnotes'};
   Object.entries(map).forEach(([k,v])=>localStorage.setItem(v,JSON.stringify(S[k])));
 }
 function getColor(id){return COLORS.find(c=>c.id===id)||COLORS[0]}
@@ -240,14 +262,20 @@ function subjectAvg(sid,gid,tid,subj){
 function colorDot(id){return{blue:'#7d4f50',green:'#6ba292',purple:'#7a5a90',coral:'#cc8b86',amber:'#a06828',teal:'#4a8a78',none:'#9a7070'}[id]||'#9a7070'}
 
 function render(){
-  const c=document.getElementById('content');c.innerHTML='';
+  const c=document.getElementById('content');c.innerHTML='';c.scrollTop=0;
   const sections={today:renderToday,daily:renderDaily,records:renderRecords,students:renderStudentsHub,planning:renderPlanning,classes:renderClasses,'group-detail':renderGroupDetail,'student-detail':renderStudentDetail,'beh-history':renderBehHistory,'grade-entry':renderGradeEntry,'contact-detail':renderContactDetail,'seating-plan':renderSeatingPlan,'iep-list':renderIEPList,'iep-detail':renderIEPDetail};
   (sections[S.section]||renderToday)(c);
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const nm={today:'nav-today',daily:'nav-daily',records:'nav-records',students:'nav-students',planning:'nav-planning',classes:'nav-classes','group-detail':'nav-classes','student-detail':'nav-students','beh-history':'nav-daily','grade-entry':'nav-records','contact-detail':'nav-records','seating-plan':'nav-students','iep-list':'nav-students','iep-detail':'nav-students'};
-  document.getElementById(nm[S.section])?.classList.add('active');
+  const labels={'nav-today':'Today','nav-daily':'Daily','nav-records':'Records','nav-students':'Students','nav-planning':'Planning','nav-classes':'Setup'};
+  document.querySelectorAll('.drawer-btn').forEach(b=>b.classList.remove('active'));
+  const activeId=nm[S.section]||'nav-today';
+  document.getElementById(activeId)?.classList.add('active');
+  document.getElementById('topbar-title').textContent=labels[activeId]||'';
   if(S.sheet)renderSheet();
 }
+function toggleDrawer(){const d=document.getElementById('drawer'),o=document.getElementById('drawer-overlay');const open=d.classList.toggle('open');o.classList.toggle('open',open);}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawer-overlay').classList.remove('open');}
+function drawerNav(s){closeDrawer();showSection(s);}
 function showSection(s){S.section=s;render()}
 
 // ── GROUP TABS ── grades section has its own version that updates gradesGroup
@@ -688,215 +716,75 @@ function renderCalendar(body){
     {y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4},{y:2026,m:5}
   ];
   const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS=['Mon','Tue','Wed','Thu','Fri'];
   const today=new Date(),td=today.getDate(),tm=today.getMonth(),ty=today.getFullYear();
+  if(!S.calNotes)S.calNotes=JSON.parse(localStorage.getItem('tt_calnotes')||'{}');
 
-  // Cell dimensions — generous for Apple Pencil writing
-  const CW=56,CH=72,DAY_HEADER=22,MONTH_HEADER=44,GAP=32,PAD=16;
-  const CANVAS_W=CW*7+PAD*2;
+  let html=`<div style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">
+    <div style="font-size:12px;color:var(--text3)">Tap any day to add notes. Weekdays only.</div>
+    <div style="flex:1"></div>
+    <button class="btn btn-sm btn-secondary" onclick="scrollToToday()">Today</button>
+  </div>
+  <div style="padding:16px;display:flex;flex-direction:column;gap:20px" id="cal-grid">`;
 
-  // Pre-calculate each month's Y offset on the single canvas
-  const monthMeta=MONTHS.map(({y,m})=>{
+  MONTHS.forEach(({y,m})=>{
     const first=new Date(y,m,1).getDay(); // 0=Sun
     const dim=new Date(y,m+1,0).getDate();
-    const rows=Math.ceil((first+dim)/7);
-    return{y,m,first,dim,rows,h:MONTH_HEADER+DAY_HEADER+rows*CH};
-  });
-  let cursor=PAD;
-  monthMeta.forEach(mm=>{mm.offsetY=cursor;cursor+=mm.h+GAP;});
-  const CANVAS_H=cursor+PAD;
-
-  // Build single SVG
-  let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}" width="${CANVAS_W}" height="${CANVAS_H}" style="display:block">`;
-
-  // Background
-  svg+=`<rect width="${CANVAS_W}" height="${CANVAS_H}" fill="#f9eae1"/>`;
-
-  const days=['S','M','T','W','T','F','S'];
-
-  monthMeta.forEach(({y,m,first,dim,rows,h,offsetY})=>{
-    const oy=offsetY;
-
-    // Month card background
-    svg+=`<rect x="${PAD/2}" y="${oy}" width="${CANVAS_W-PAD}" height="${h}" rx="10" fill="#fff8f4" stroke="#e0c8be" stroke-width="1"/>`;
-
-    // Month title bar
-    svg+=`<rect x="${PAD/2}" y="${oy}" width="${CANVAS_W-PAD}" height="${MONTH_HEADER}" rx="10" fill="#f0e0d6"/>`;
-    svg+=`<rect x="${PAD/2}" y="${oy+MONTH_HEADER-6}" width="${CANVAS_W-PAD}" height="6" fill="#f0e0d6"/>`;
-    svg+=`<text x="${CANVAS_W/2}" y="${oy+MONTH_HEADER/2+6}" text-anchor="middle" font-size="17" font-weight="700" fill="#2a1a1a" font-family="system-ui,sans-serif">${MN[m]} ${y}</text>`;
-
-    // Day-of-week headers
-    days.forEach((d,i)=>{
-      const x=PAD+i*CW+CW/2;
-      const isWknd=i===0||i===6;
-      svg+=`<text x="${x}" y="${oy+MONTH_HEADER+DAY_HEADER-5}" text-anchor="middle" font-size="11" font-weight="600" fill="${isWknd?'#cc8b86':'#9a7070'}" font-family="system-ui,sans-serif">${d}</text>`;
+    // Build array of {date,dayOfWeek} for weekdays only
+    const weekdays=[];
+    for(let d=1;d<=dim;d++){
+      const dow=new Date(y,m,d).getDay();
+      if(dow>=1&&dow<=5)weekdays.push({d,dow});
+    }
+    // Group into weeks (Mon-Fri rows)
+    const rows=[];
+    let row=null;
+    weekdays.forEach(({d,dow})=>{
+      if(!row||dow===1){
+        row=new Array(5).fill(null);
+        rows.push(row);
+      }
+      row[dow-1]={d,dow};
     });
 
-    // Divider under day headers
-    svg+=`<line x1="${PAD}" y1="${oy+MONTH_HEADER+DAY_HEADER}" x2="${CANVAS_W-PAD}" y2="${oy+MONTH_HEADER+DAY_HEADER}" stroke="#e0c8be" stroke-width="0.75"/>`;
-
-    // Vertical column dividers
-    for(let i=1;i<7;i++){
-      const x=PAD+i*CW;
-      svg+=`<line x1="${x}" y1="${oy+MONTH_HEADER+DAY_HEADER}" x2="${x}" y2="${oy+h}" stroke="#1e2130" stroke-width="0.5"/>`;
-    }
-
-    // Day cells
-    for(let row=0;row<rows;row++){
-      for(let col=0;col<7;col++){
-        const dayNum=row*7+col-first+1;
-        if(dayNum<1||dayNum>dim)continue;
-        const x=PAD+col*CW;
-        const cy=oy+MONTH_HEADER+DAY_HEADER+row*CH;
-        const isToday=dayNum===td&&m===tm&&y===ty;
-        const isWknd=col===0||col===6;
-
-        // Cell fill
-        if(isToday){
-          svg+=`<rect x="${x+1}" y="${cy+1}" width="${CW-2}" height="${CH-2}" fill="#1a2040"/>`;
-          svg+=`<rect x="${x+1}" y="${cy+1}" width="${CW-2}" height="${CH-2}" fill="none" stroke="#4f7cff" stroke-width="1.5" rx="2"/>`;
-        } else if(isWknd){
-          svg+=`<rect x="${x+1}" y="${cy+1}" width="${CW-2}" height="${CH-2}" fill="#161820"/>`;
-        }
-
-        // Horizontal row dividers
-        if(row>0){
-          svg+=`<line x1="${PAD}" y1="${cy}" x2="${CANVAS_W-PAD}" y2="${cy}" stroke="#1e2130" stroke-width="0.5"/>`;
-        }
-
-        // Day number
-        if(isToday){
-          svg+=`<circle cx="${x+14}" cy="${cy+13}" r="10" fill="#4f7cff"/>`;
-          svg+=`<text x="${x+14}" y="${cy+17}" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff" font-family="system-ui,sans-serif">${dayNum}</text>`;
-        } else {
-          svg+=`<text x="${x+8}" y="${cy+16}" font-size="11" font-weight="500" fill="${isWknd?'#374151':'#4b5563'}" font-family="system-ui,sans-serif">${dayNum}</text>`;
-        }
-
-        // Writing lines — 4 faint ruled lines per cell for pencil
-        for(let li=0;li<4;li++){
-          const ly=cy+26+li*11;
-          if(ly<cy+CH-4)svg+=`<line x1="${x+4}" y1="${ly}" x2="${x+CW-4}" y2="${ly}" stroke="#1c1f2e" stroke-width="0.6"/>`;
-        }
-      }
-    }
+    const isCurrentMonth=m===tm&&y===ty;
+    html+=`<div class="cal-month" id="cal-month-${y}-${m}" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="background:var(--bg3);padding:10px 14px;font-size:14px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)">${MN[m]} ${y}</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border)">
+        ${DAYS.map(d=>`<div style="padding:6px 4px;text-align:center;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.04em">${d}</div>`).join('')}
+      </div>
+      ${rows.map(row=>`
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border)">
+          ${row.map((cell,ci)=>{
+            if(!cell)return`<div style="background:var(--bg3);border-right:1px solid var(--border);min-height:72px"></div>`;
+            const key=`${y}-${String(m+1).padStart(2,'0')}-${String(cell.d).padStart(2,'0')}`;
+            const isToday=cell.d===td&&m===tm&&y===ty;
+            const val=(S.calNotes[key]||'').replace(/</g,'&lt;');
+            return`<div style="border-right:1px solid var(--border);display:flex;flex-direction:column;${isToday?'background:var(--blue-bg);':''}">
+              <div style="padding:4px 6px;font-size:11px;font-weight:600;color:${isToday?'var(--blue)':'var(--text3)'}">${cell.d}</div>
+              <textarea id="cal-${key}" style="flex:1;width:100%;min-height:60px;background:transparent;border:none;outline:none;resize:none;padding:2px 6px 6px;font-size:12px;color:var(--text);font-family:inherit;line-height:1.4" placeholder="…" oninput="saveCalNote('${key}',this.value)">${val}</textarea>
+            </div>`;
+          }).join('')}
+        </div>
+      `).join('')}
+    </div>`;
   });
 
-  // Today indicator label at very top
-  svg+=`<text x="${CANVAS_W/2}" y="12" text-anchor="middle" font-size="9" fill="#cdb0a6" font-family="system-ui,sans-serif">Aug 2025 – Jun 2026  ·  Use Apple Pencil to annotate</text>`;
+  html+=`</div>`;
+  body.innerHTML=html;
 
-  svg+=`</svg>`;
-
-  body.innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0">
-      <button class="btn btn-secondary btn-sm" onclick="calZoom(-0.25)" style="font-size:18px;line-height:1;padding:4px 14px">−</button>
-      <div id="cal-zoom-label" style="font-size:12px;color:var(--text3);min-width:42px;text-align:center">100%</div>
-      <button class="btn btn-secondary btn-sm" onclick="calZoom(+0.25)" style="font-size:18px;line-height:1;padding:4px 14px">+</button>
-      <div style="width:1px;height:20px;background:var(--border2);margin:0 4px"></div>
-      <button class="btn btn-secondary btn-sm" onclick="calFit()" style="font-size:11px">Fit</button>
-      <button class="btn btn-secondary btn-sm" onclick="calToday()" style="font-size:11px">Today</button>
-      <div style="flex:1"></div>
-      <div style="font-size:11px;color:var(--text3)">✏️ Pencil ready</div>
-    </div>
-    <div id="cal-viewport" style="position:relative;width:100%;height:calc(100vh - 212px);overflow:hidden;background:#f9eae1;touch-action:none;cursor:grab">
-      <div id="cal-canvas" style="position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform">
-        ${svg}
-      </div>
-    </div>`;
-
-  // ── Interaction ───────────────────────────────────────
-  let zoom=1,panX=0,panY=0;
-  const vp=document.getElementById('cal-viewport');
-  const cv=document.getElementById('cal-canvas');
-
-  function applyView(){
-    cv.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
-    const lbl=document.getElementById('cal-zoom-label');
-    if(lbl)lbl.textContent=Math.round(zoom*100)+'%';
-  }
-
-  // Fit calendar width to viewport on load
-  const vpW=vp.clientWidth||360;
-  zoom=Math.min(1,(vpW-8)/CANVAS_W);
-  panX=Math.max(0,(vpW-CANVAS_W*zoom)/2);
-  panY=0;
-  applyView();
-
-  window.calZoom=d=>{
-    const vr=vp.getBoundingClientRect();
-    const cx=vr.width/2,cy=vr.height/2;
-    const nz=Math.min(4,Math.max(0.2,zoom+d));
-    panX=cx-(cx-panX)*(nz/zoom);
-    panY=cy-(cy-panY)*(nz/zoom);
-    zoom=nz;applyView();
+  window.scrollToToday=()=>{
+    const el=document.getElementById(`cal-month-${ty}-${tm}`);
+    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
   };
-  window.calFit=()=>{
-    const vpW2=vp.clientWidth||360;
-    zoom=Math.min(1,(vpW2-8)/CANVAS_W);
-    panX=Math.max(0,(vpW2-CANVAS_W*zoom)/2);
-    panY=0;applyView();
-  };
-  window.calToday=()=>{
-    const mm=monthMeta.find(x=>x.m===tm&&x.y===ty);
-    if(!mm)return;
-    const vpH=vp.clientHeight||500;
-    panY=-(mm.offsetY*zoom)+(vpH/2-100);
-    applyView();
-  };
-
-  // Jump to today on load
-  window.calToday();
-
-  // Mouse wheel zoom
-  vp.addEventListener('wheel',e=>{
-    e.preventDefault();
-    const d=e.deltaY>0?-0.12:0.12;
-    const vr=vp.getBoundingClientRect();
-    const mx=e.clientX-vr.left,my=e.clientY-vr.top;
-    const nz=Math.min(4,Math.max(0.2,zoom+d));
-    panX=mx-(mx-panX)*(nz/zoom);
-    panY=my-(my-panY)*(nz/zoom);
-    zoom=nz;applyView();
-  },{passive:false});
-
-  // Mouse drag pan
-  let mp=false,mx0=0,my0=0,px0=0,py0=0;
-  vp.addEventListener('mousedown',e=>{mp=true;mx0=e.clientX;my0=e.clientY;px0=panX;py0=panY;vp.style.cursor='grabbing';e.preventDefault();});
-  document.addEventListener('mousemove',e=>{if(!mp)return;panX=px0+(e.clientX-mx0);panY=py0+(e.clientY-my0);applyView();});
-  document.addEventListener('mouseup',()=>{if(mp){mp=false;vp.style.cursor='grab';}});
-
-  // Touch: pinch zoom + pan
-  let pinching=false,pd0=0,pz0=1,pmx=0,pmy=0,ppx=0,ppy=0,tmx=0,tmy=0,tpx=0,tpy=0;
-  function tDist(e){return Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
-
-  vp.addEventListener('touchstart',e=>{
-    e.preventDefault();
-    if(e.touches.length===2){
-      pinching=true;pd0=tDist(e);pz0=zoom;
-      const vr=vp.getBoundingClientRect();
-      pmx=(e.touches[0].clientX+e.touches[1].clientX)/2-vr.left;
-      pmy=(e.touches[0].clientY+e.touches[1].clientY)/2-vr.top;
-      ppx=panX;ppy=panY;
-    } else if(e.touches.length===1){
-      pinching=false;
-      tmx=e.touches[0].clientX;tmy=e.touches[0].clientY;tpx=panX;tpy=panY;
-    }
-  },{passive:false});
-
-  vp.addEventListener('touchmove',e=>{
-    e.preventDefault();
-    if(e.touches.length===2&&pinching){
-      const nz=Math.min(4,Math.max(0.2,pz0*(tDist(e)/pd0)));
-      panX=pmx-(pmx-ppx)*(nz/pz0);
-      panY=pmy-(pmy-ppy)*(nz/pz0);
-      zoom=nz;applyView();
-    } else if(e.touches.length===1&&!pinching){
-      panX=tpx+(e.touches[0].clientX-tmx);
-      panY=tpy+(e.touches[0].clientY-tmy);
-      applyView();
-    }
-  },{passive:false});
-
-  vp.addEventListener('touchend',e=>{if(e.touches.length<2)pinching=false;});
+  setTimeout(()=>window.scrollToToday(),100);
 }
+
+window.saveCalNote=function(key,val){
+  if(!S.calNotes)S.calNotes={};
+  if(val.trim())S.calNotes[key]=val;else delete S.calNotes[key];
+  localStorage.setItem('tt_calnotes',JSON.stringify(S.calNotes));
+};
 
 // ── SCHEDULE ─────────────────────────────────────────────
 function renderSchedule(body){
