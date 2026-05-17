@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Teacher Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#f9eae1;--bg2:#fff8f4;--bg3:#f0e0d6;--bg4:#e8d0c6;
+--text:#2a1a1a;--text2:#5c3d3d;--text3:#9a7070;
+--border:#e0c8be;--border2:#cdb0a6;
+--blue:#7d4f50;--blue2:#6a3f40;--blue-bg:#f3e0e0;
+--green:#4a8a78;--green-bg:#ddf0eb;
+--red:#b84040;--red-bg:#fce8e8;
+--amber:#a06828;--amber-bg:#faeedd;
+--purple:#7a5a90;--purple-bg:#ede0f3;
+--teal:#6ba292;--teal-bg:#ddf0eb;
+--coral:#cc8b86;--coral-bg:#faeae8;
+--radius:12px;--radius-sm:8px;--nav-h:64px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden}
+#app{display:flex;flex-direction:column;min-height:100vh;max-width:600px;margin:0 auto}
+#content{flex:1;overflow-y:auto;padding:0 0 calc(var(--nav-h)+8px)}
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding:0 4px}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:var(--radius-sm);border:none;background:none;color:var(--text3);cursor:pointer;transition:all .15s;flex:1;min-width:0}
+.nav-btn.active{color:var(--blue)}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nav-btn span{font-size:10px;font-weight:500;white-space:nowrap}
+.page-header{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
+.page-title{font-size:20px;font-weight:600}
+.btn-icon{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--bg3);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.btn-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.tile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:8px;min-height:90px}
+.tile:active{transform:scale(0.97);background:var(--bg3)}
+.tile-icon{width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center}
+.tile-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tile-label{font-size:13px;font-weight:600}.tile-sub{font-size:11px;color:var(--text3)}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin:0 16px 12px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:14px;outline:none}
+.form-input:focus{border-color:var(--blue)}
+.btn{padding:10px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:active{background:var(--blue2)}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap}
+.student-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.student-row:last-child{border-bottom:none}
+.student-row:active{background:var(--bg3)}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--text2);overflow:hidden;flex-shrink:0}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.student-info{flex:1;min-width:0}.student-name{font-size:14px;font-weight:500}.student-meta{font-size:12px;color:var(--text3)}
+.chevron svg{width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.group-badge{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.col-blue{background:var(--blue-bg);color:var(--blue)}.col-green{background:var(--green-bg);color:var(--green)}
+.col-purple{background:var(--purple-bg);color:var(--purple)}.col-coral{background:var(--coral-bg);color:var(--coral)}
+.col-amber{background:var(--amber-bg);color:var(--amber)}.col-teal{background:var(--teal-bg);color:var(--teal)}
+.color-options{display:flex;gap:8px;flex-wrap:wrap}
+.color-opt{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.color-opt.selected{border-color:#fff;transform:scale(1.1)}
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding-bottom:32px}
+.sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0}
+.sheet-header{padding:16px 20px;font-size:17px;font-weight:600;border-bottom:1px solid var(--border)}
+.sheet-body{padding:16px 20px}
+.photo-upload{width:80px;height:80px;border-radius:50%;background:var(--bg3);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0}
+.photo-upload img{width:100%;height:100%;object-fit:cover}
+.photo-upload svg{width:28px;height:28px;stroke:var(--text3);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:12px;text-align:center}
+.empty svg{width:48px;height:48px;stroke:var(--text3);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.empty-title{font-size:16px;font-weight:600;color:var(--text2)}.empty-sub{font-size:13px;color:var(--text3)}
+.section-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between}
+.tag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.group-tabs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto}
+.group-tab{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);white-space:nowrap;transition:all .15s}
+.group-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.date-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.date-nav{display:flex;align-items:center;gap:4px}
+.date-nav button{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--bg3);border:1px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.date-nav button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.date-nav input[type=date]{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px;color:var(--text);font-size:13px;outline:none}
+.att-btns{display:flex;gap:6px}
+.att-btn{padding:5px 10px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap}
+.att-present{background:var(--green-bg);color:var(--green)}.att-present.sel{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+.att-absent{background:var(--red-bg);color:var(--red)}.att-absent.sel{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+.att-late{background:var(--amber-bg);color:var(--amber)}.att-late.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.att-early{background:var(--purple-bg);color:var(--purple)}.att-early.sel{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple)}
+.face-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;padding:16px}
+.face-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.face-name{font-size:11px;font-weight:500;text-align:center;color:var(--text2);line-height:1.3;word-break:break-word}
+.face-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg4);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:var(--text2);overflow:hidden;flex-shrink:0;cursor:pointer}
+.face-avatar img{width:100%;height:100%;object-fit:cover}
+.part-btns{display:flex;gap:6px}
+.part-btn{width:34px;height:34px;border-radius:var(--radius-sm);font-size:16px;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);display:flex;align-items:center;justify-content:center;transition:all .15s;font-weight:700}
+.part-btn:active{transform:scale(0.9)}
+.part-check.active{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.part-x.active{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.part-tally{font-size:10px;color:var(--text3);text-align:center}
+.beh-tag{padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);transition:all .15s;text-align:center}
+.beh-tag:active{transform:scale(0.95)}
+.beh-pos{background:var(--green-bg);color:var(--green);border-color:var(--green-bg)}
+.beh-neg{background:var(--red-bg);color:var(--red);border-color:var(--red-bg)}
+.beh-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0}
+.beh-log-item{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.beh-log-item:last-child{border-bottom:none}
+.beh-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.todo-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.todo-item:last-child{border-bottom:none}
+.todo-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s}
+.todo-check.done{background:var(--blue);border-color:var(--blue)}
+.todo-check svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.todo-body{flex:1;min-width:0}.todo-title{font-size:14px;font-weight:500}.todo-title.done{text-decoration:line-through;color:var(--text3)}
+.todo-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.todo-del{width:28px;height:28px;border-radius:var(--radius-sm);background:none;border:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.todo-del svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sub-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 8px}
+.sub-tab{flex:1;padding:10px 4px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);cursor:pointer;font-size:12px;font-weight:500;transition:all .15s}
+.sub-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.grade-table{width:100%;border-collapse:collapse;font-size:12px}
+.grade-table th{padding:8px 10px;text-align:left;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap}
+.grade-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.grade-table tr:last-child td{border-bottom:none}
+.level-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block}
+.level-1{background:#fce8e8;color:#b84040}.level-2{background:#faeedd;color:#a06828}
+.level-3{background:#ddf0eb;color:#4a8a78}.level-4{background:#ddf0eb;color:#2d6e5a}
+.level-5{background:#f3e0e0;color:#7d4f50}.level-5p{background:#ede0f3;color:#7a5a90}
+.check-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.check-row:last-child{border-bottom:none}
+.sub-toggle{width:28px;height:28px;border-radius:6px;border:2px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sub-toggle.submitted{background:var(--green-bg);border-color:var(--green)}
+.sub-toggle svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.sub-toggle.submitted svg{stroke:var(--green)}
+.contact-item{padding:12px 16px;border-bottom:1px solid var(--border)}
+.contact-item:last-child{border-bottom:none}
+.bar-wrap{padding:0 16px 16px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:12px;color:var(--text2);width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:18px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-val{font-size:12px;color:var(--text3);width:48px;text-align:right;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="app"><div id="content"></div>
+<nav id="nav">
+  <button class="nav-btn active" onclick="showSection('today')" id="nav-today"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Today</span></button>
+  <button class="nav-btn" onclick="showSection('daily')" id="nav-daily"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Daily</span></button>
+  <button class="nav-btn" onclick="showSection('records')" id="nav-records"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Records</span></button>
+  <button class="nav-btn" onclick="showSection('students')" id="nav-students"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>Students</span></button>
+  <button class="nav-btn" onclick="showSection('planning')" id="nav-planning"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Planning</span></button>
+  <button class="nav-btn" onclick="showSection('classes')" id="nav-classes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>Setup</span></button>
+</nav></div>
+<script>
+const S={
+  section:'today',
+  groups:JSON.parse(localStorage.getItem('tt_groups')||'[]'),
+  students:JSON.parse(localStorage.getItem('tt_students')||'[]'),
+  attendance:JSON.parse(localStorage.getItem('tt_attendance')||'{}'),
+  participation:JSON.parse(localStorage.getItem('tt_participation')||'{}'),
+  behavior:JSON.parse(localStorage.getItem('tt_behavior')||'[]'),
+  behaviorTags:JSON.parse(localStorage.getItem('tt_btags')||'null')||[
+    {id:'bt1',label:'On Task',type:'pos'},{id:'bt2',label:'Great Effort',type:'pos'},{id:'bt3',label:'Helpful',type:'pos'},{id:'bt4',label:'Positive Attitude',type:'pos'},{id:'bt5',label:'Strong Participation',type:'pos'},
+    {id:'bt6',label:'Off Task',type:'neg'},{id:'bt7',label:'Disruptive',type:'neg'},{id:'bt8',label:'Called Out',type:'neg'},{id:'bt9',label:'Needs Redirect',type:'neg'},{id:'bt10',label:'Unprepared',type:'neg'},
+  ],
+  todos:JSON.parse(localStorage.getItem('tt_todos')||'[]'),
+  grades:JSON.parse(localStorage.getItem('tt_grades')||'{}'),
+  gassign:JSON.parse(localStorage.getItem('tt_gassign')||'[]'),
+  rubric:JSON.parse(localStorage.getItem('tt_rubric')||'null')||{1:0,2:55,3:70,4:80,5:90,6:100},
+  terms:JSON.parse(localStorage.getItem('tt_terms')||'null')||[{id:'t1',label:'Term 1',start:'',end:''},{id:'t2',label:'Term 2',start:'',end:''},{id:'t3',label:'Term 3',start:'',end:''}],
+  checklist:JSON.parse(localStorage.getItem('tt_checklist')||'{}'),
+  assignments:JSON.parse(localStorage.getItem('tt_assignments')||'[]'),
+  contacts:JSON.parse(localStorage.getItem('tt_contacts')||'[]'),
+  schedule:JSON.parse(localStorage.getItem('tt_schedule')||'{}'),
+  schedBlocks:JSON.parse(localStorage.getItem('tt_schedblocks')||'null')||['8:00','8:50','9:40','10:30','11:20','12:10','13:00','13:50','14:40','15:30'],
+  journal:JSON.parse(localStorage.getItem('tt_journal')||'{}'),
+  iepStrategies:JSON.parse(localStorage.getItem('tt_iepstrats')||'{}'),
+  schedImages:JSON.parse(localStorage.getItem('tt_schedimgs')||'[]'),
+  studentNotes:JSON.parse(localStorage.getItem('tt_snotes')||'{}'),
+  subNotes:JSON.parse(localStorage.getItem('tt_subnotes')||'null')||null,
+  iepStudent:null,
+  sheet:null,editGroup:null,editStudent:null,
+  dailyTab:'attendance',recordsTab:'grades',planTab:'schedule',
+  activeGroup:null,attDate:todayStr(),partDate:todayStr(),
+  behStudent:null,showDoneTodos:false,
+  gradesGroup:null,gradesTerm:'t1',gradesSubject:'ela',
+  currentAssign:null,schedDay:'Monday',journalGroup:null,journalDate:todayStr(),
+  checkGroup:null,reportGroup:null,reportType:'behaviour',contactStudent:null,
+};
+const COLORS=[{id:'blue',label:'Smoky Rose',dot:'#7d4f50',cls:'col-blue'},{id:'green',label:'Muted Teal',dot:'#6ba292',cls:'col-green'},{id:'purple',label:'Purple',dot:'#7a5a90',cls:'col-purple'},{id:'coral',label:'Dusty Rose',dot:'#cc8b86',cls:'col-coral'},{id:'amber',label:'Amber',dot:'#a06828',cls:'col-amber'},{id:'teal',label:'Teal',dot:'#4a8a78',cls:'col-teal'}];
+const SUBJECTS=[
+  {id:'ela',label:'ELA',comps:[{id:'oral',label:'ELA Oral',w:33.3},{id:'comp',label:'ELA Comprehension',w:33.3},{id:'prod',label:'ELA Produces',w:33.4}]},
+  {id:'math',label:'Math',comps:[{id:'sit',label:'Situational Problems',w:30},{id:'reas',label:'Reasoning',w:70}]},
+  {id:'ccq',label:'CCQ',comps:[{id:'ccq1',label:'Culture & Citizenship in Quebec',w:100}]},
+];
+function todayStr(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-').map(Number);return`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${d}, ${y}`}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',hour12:true})}
+function offsetDate(s,days){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+days);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function save(){
+  const map={groups:'tt_groups',students:'tt_students',attendance:'tt_attendance',participation:'tt_participation',behavior:'tt_behavior',behaviorTags:'tt_btags',todos:'tt_todos',grades:'tt_grades',gassign:'tt_gassign',rubric:'tt_rubric',terms:'tt_terms',checklist:'tt_checklist',assignments:'tt_assignments',contacts:'tt_contacts',schedule:'tt_schedule',schedBlocks:'tt_schedblocks',journal:'tt_journal',iepStrategies:'tt_iepstrats',schedImages:'tt_schedimgs',studentNotes:'tt_snotes',subNotes:'tt_subnotes'};
+  Object.entries(map).forEach(([k,v])=>localStorage.setItem(v,JSON.stringify(S[k])));
+}
+function getColor(id){return COLORS.find(c=>c.id===id)||COLORS[0]}
+function initials(n){return n.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?'}
+function activeGroup(){if(S.activeGroup&&S.groups.find(g=>g.id===S.activeGroup))return S.activeGroup;return S.groups[0]?.id||null}
+function sortStudents(arr,mode){if(mode==='last')return[...arr].sort((a,b)=>a.name.trim().split(' ').pop().toLowerCase().localeCompare(b.name.trim().split(' ').pop().toLowerCase()));return[...arr].sort((a,b)=>(parseInt(a.num)||999)-(parseInt(b.num)||999))}
+function groupStudents(gid){const g=S.groups.find(x=>x.id===gid);return sortStudents(S.students.filter(s=>s.groupId===gid),g?.sortMode||'num')}
+function nextStudentNum(gid){const nums=S.students.filter(s=>s.groupId===gid&&s.num).map(s=>parseInt(s.num)||0);return nums.length?Math.max(...nums)+1:1}
+function formatDate(d){if(!d)return'';const[y,m,day]=d.split('-').map(Number);return`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${day}, ${y}`}
+function pctToLevel(p){const r=S.rubric;if(p>=r[6])return'5+';if(p>=r[5])return'5';if(p>=r[4])return'4';if(p>=r[3])return'3';if(p>=r[2])return'2';return'1'}
+function levelBadge(l){return`<span class="level-badge level-${l==='5+'?'5p':l}">${l}</span>`}
+function compAssigns(gid,tid,subj,comp){return S.gassign.filter(a=>a.groupId===gid&&a.termId===tid&&a.subj===subj&&a.comp===comp)}
+function getScore(sid,aid){return S.grades[sid+'__'+aid]||null}
+function compAvgDirect(sid,gid,tid,subj,comp){
+  const as=compAssigns(gid,tid,subj,comp);
+  const sc=as.map(a=>{const s=getScore(sid,a.id);return s?{scored:s.scored,possible:a.possible,modified:s.modified}:null}).filter(x=>x&&!x.modified);
+  if(!sc.length)return null;
+  return sc.reduce((t,x)=>t+(x.scored/x.possible*100),0)/sc.length;
+}
+function subjectAvg(sid,gid,tid,subj){
+  const sub=SUBJECTS.find(s=>s.id===subj);let ws=0,wt=0;
+  sub.comps.forEach(c=>{const a=compAvgDirect(sid,gid,tid,subj,c.id);if(a!==null){ws+=a*c.w;wt+=c.w}});
+  return wt>0?ws/wt:null;
+}
+function colorDot(id){return{blue:'#7d4f50',green:'#6ba292',purple:'#7a5a90',coral:'#cc8b86',amber:'#a06828',teal:'#4a8a78',none:'#9a7070'}[id]||'#9a7070'}
+
+function render(){
+  const c=document.getElementById('content');c.innerHTML='';
+  const sections={today:renderToday,daily:renderDaily,records:renderRecords,students:renderStudentsHub,planning:renderPlanning,classes:renderClasses,'group-detail':renderGroupDetail,'student-detail':renderStudentDetail,'beh-history':renderBehHistory,'grade-entry':renderGradeEntry,'contact-detail':renderContactDetail,'seating-plan':renderSeatingPlan,'iep-list':renderIEPList,'iep-detail':renderIEPDetail};
+  (sections[S.section]||renderToday)(c);
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const nm={today:'nav-today',daily:'nav-daily',records:'nav-records',students:'nav-students',planning:'nav-planning',classes:'nav-classes','group-detail':'nav-classes','student-detail':'nav-students','beh-history':'nav-daily','grade-entry':'nav-records','contact-detail':'nav-records','seating-plan':'nav-students','iep-list':'nav-students','iep-detail':'nav-students'};
+  document.getElementById(nm[S.section])?.classList.add('active');
+  if(S.sheet)renderSheet();
+}
+function showSection(s){S.section=s;render()}
+
+// ── GROUP TABS ── grades section has its own version that updates gradesGroup
+function groupTabsHTML(active,onClickFn){
+  if(!S.groups.length)return'<div style="padding:12px 16px;font-size:13px;color:var(--text3)">No groups set up</div>';
+  const clickHandler=onClickFn||`S.activeGroup='%ID%';render()`;
+  return`<div class="group-tabs">${S.groups.map(g=>{const fn=onClickFn?onClickFn.replace(/%ID%/g,g.id):`S.activeGroup='${g.id}';render()`;return`<div class="group-tab${g.id===active?' active':''}" onclick="${fn}">${g.name}</div>`;}).join('')}</div>`;
+}
+function groupTabsHTML(active,onClickTpl){
+  if(!S.groups.length)return'<div style="padding:12px 16px;font-size:13px;color:var(--text3)">No groups set up</div>';
+  return`<div class="group-tabs">${S.groups.map(g=>{const fn=onClickTpl?onClickTpl.replace(/%ID%/g,g.id):`S.activeGroup='${g.id}';render()`;return`<div class="group-tab${g.id===active?' active':''}" onclick="${fn}">${g.name}</div>`;}).join('')}</div>`;
+}
+
+function datBarHTML(key){const val=S[key],isT=val===todayStr();return`<div class="date-bar"><div class="date-nav"><button onclick="S.${key}=offsetDate(S.${key},-1);render()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><input type="date" value="${val}" max="${todayStr()}" onchange="S.${key}=this.value;render()"><button onclick="S.${key}=offsetDate(S.${key},1);render()" ${isT?'disabled style="opacity:.4"':''}><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div><div style="font-size:14px;font-weight:600">${isT?'Today':fmtDate(val)}</div></div>`}
+
+function renderToday(c){
+  const today=new Date(),days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const bdays=S.students.filter(s=>{if(!s.birthday)return false;const[,m,d]=s.birthday.split('-').map(Number);return m===today.getMonth()+1&&d===today.getDate()});
+  const pending=S.todos.filter(t=>!t.done);
+  c.innerHTML=`<div class="page-header"><div class="page-title">Today</div><div style="font-size:13px;color:var(--text3)">${days[today.getDay()]}, ${mn[today.getMonth()]} ${today.getDate()}</div></div>
+  ${bdays.length?`<div style="margin:16px 16px 0;background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">🎂</span><div><div style="font-size:13px;font-weight:600;color:var(--amber)">Birthday${bdays.length>1?'s':''} Today</div><div style="font-size:12px;color:var(--text2)">${bdays.map(s=>s.name).join(', ')}</div></div></div>`:''}
+  ${pending.length?`<div style="margin:16px 16px 0;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--radius);padding:12px 16px"><div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:6px">${pending.length} task${pending.length!==1?'s':''} pending</div>${pending.slice(0,3).map(t=>`<div style="font-size:12px;color:var(--text2);padding:2px 0">· ${t.title}</div>`).join('')}${pending.length>3?`<div style="font-size:12px;color:var(--text3)">+${pending.length-3} more</div>`:''}</div>`:''}
+  <div class="section-label">Quick Access</div>
+  <div class="tile-grid">
+    <div class="tile" onclick="S.section='daily';S.dailyTab='attendance';render()"><div class="tile-icon col-blue"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="tile-label">Attendance</div><div class="tile-sub">Mark today</div></div>
+    <div class="tile" onclick="S.section='daily';S.dailyTab='behaviour';render()"><div class="tile-icon col-amber"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="tile-label">Behaviour</div><div class="tile-sub">Log incident</div></div>
+    <div class="tile" onclick="S.section='records';S.recordsTab='grades';render()"><div class="tile-icon col-purple"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="tile-label">Grades</div><div class="tile-sub">Enter marks</div></div>
+    <div class="tile" onclick="S.section='daily';S.dailyTab='todo';render()"><div class="tile-icon col-teal"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div><div class="tile-label">To-Do</div><div class="tile-sub">${pending.length} pending</div></div>
+  </div>
+  ${S.groups.length===0?`<div style="margin:8px 16px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--radius);padding:14px 16px"><div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:4px">Get started</div><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Set up your groups and add students first.</div><button class="btn btn-primary btn-sm" onclick="showSection('classes')">Set up classes</button></div>`:`<div class="section-label">Your Groups</div>${S.groups.map(g=>{const col=getColor(g.color);const cnt=S.students.filter(s=>s.groupId===g.id).length;return`<div class="student-row" onclick="S.editGroup='${g.id}';S.section='group-detail';render()"><div class="color-dot" style="background:${col.dot}"></div><div class="student-info"><div class="student-name">${g.name}</div><div class="student-meta">${cnt} student${cnt!==1?'s':''}</div></div><div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`;}).join('')}`}`;
+}
+
+function renderDaily(c){
+  const tabs=[{id:'attendance',label:'Attendance'},{id:'participation',label:'Participation'},{id:'behaviour',label:'Behaviour'},{id:'todo',label:'To-Do'}];
+  const t=S.dailyTab;
+  c.innerHTML=`<div class="page-header"><div class="page-title">Daily</div></div>
+  <div style="display:flex;border-bottom:1px solid var(--border);padding:0 8px">${tabs.map(tab=>`<button onclick="S.dailyTab='${tab.id}';render()" style="flex:1;padding:10px 4px;background:none;border:none;border-bottom:2px solid ${tab.id===t?'var(--blue)':'transparent'};color:${tab.id===t?'var(--blue)':'var(--text3)'};cursor:pointer;font-size:11px;font-weight:500">${tab.label}</button>`).join('')}</div>
+  <div id="daily-body"></div>`;
+  const body=document.getElementById('daily-body');
+  if(t==='attendance')renderAttendance(body);
+  else if(t==='participation')renderParticipation(body);
+  else if(t==='behaviour')renderBehaviour(body);
+  else if(t==='todo')renderTodo(body);
+}
+
+function getAtt(sid,gid,date){return(S.attendance[gid+'__'+date]||{})[sid]||null}
+function setAtt(sid,gid,date,st){const k=gid+'__'+date;if(!S.attendance[k])S.attendance[k]={};if(S.attendance[k][sid]===st)delete S.attendance[k][sid];else S.attendance[k][sid]=st;save();renderAttBody()}
+function renderAttendance(body){const gid=activeGroup();body.innerHTML=groupTabsHTML(gid)+datBarHTML('attDate')+'<div id="att-body"></div>';renderAttBody()}
+function renderAttBody(){
+  const body=document.getElementById('att-body');if(!body)return;
+  const gid=activeGroup(),date=S.attDate;
+  if(!gid){body.innerHTML='<div class="empty"><div class="empty-title">No groups</div></div>';return}
+  const students=groupStudents(gid);
+  const sts=[{id:'present',label:'P',cls:'att-present'},{id:'absent',label:'A',cls:'att-absent'},{id:'late',label:'L',cls:'att-late'},{id:'early',label:'E',cls:'att-early'}];
+  const sum={present:0,absent:0,late:0,early:0};
+  students.forEach(s=>{const st=getAtt(s.id,gid,date);if(st)sum[st]=(sum[st]||0)+1});
+  body.innerHTML=`<div style="display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:60px;background:var(--green-bg);border-radius:var(--radius-sm);padding:8px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--green)">${sum.present}</div><div style="font-size:10px;color:var(--text3)">Present</div></div>
+    <div style="flex:1;min-width:60px;background:var(--red-bg);border-radius:var(--radius-sm);padding:8px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--red)">${sum.absent}</div><div style="font-size:10px;color:var(--text3)">Absent</div></div>
+    <div style="flex:1;min-width:60px;background:var(--amber-bg);border-radius:var(--radius-sm);padding:8px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--amber)">${sum.late}</div><div style="font-size:10px;color:var(--text3)">Late</div></div>
+    <div style="flex:1;min-width:60px;background:var(--purple-bg);border-radius:var(--radius-sm);padding:8px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--purple)">${sum.early}</div><div style="font-size:10px;color:var(--text3)">Left Early</div></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">${students.map(s=>{const cur=getAtt(s.id,gid,date);return`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)"><div class="avatar" style="width:36px;height:36px;font-size:12px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div style="flex:1;font-size:13px;font-weight:500">${s.name}</div><div class="att-btns">${sts.map(st=>`<button class="att-btn ${st.cls}${cur===st.id?' sel':''}" onclick="setAtt('${s.id}','${gid}','${S.attDate}','${st.id}')">${st.label}</button>`).join('')}</div></div>`;}).join('')}</div>`;
+}
+
+function getPart(sid,gid,date){return(S.participation[gid+'__'+date]||{})[sid]||{c:0,x:0}}
+function addPart(sid,gid,date,type){const k=gid+'__'+date;if(!S.participation[k])S.participation[k]={};if(!S.participation[k][sid])S.participation[k][sid]={c:0,x:0};S.participation[k][sid][type]++;save();const el=document.getElementById('pcard-'+sid);if(el){const p=getPart(sid,gid,date);el.querySelector('.part-tally').textContent=`${p.c}✓  ${p.x}✗`;el.querySelector('.part-check').classList.toggle('active',p.c>0);el.querySelector('.part-x').classList.toggle('active',p.x>0);}}
+function renderParticipation(body){const gid=activeGroup();body.innerHTML=groupTabsHTML(gid)+datBarHTML('partDate')+'<div id="part-body"></div>';renderPartBody()}
+function renderPartBody(){
+  const body=document.getElementById('part-body');if(!body)return;
+  const gid=activeGroup(),date=S.partDate;
+  body.innerHTML=`<div class="face-grid">${groupStudents(gid).map(s=>{const p=getPart(s.id,gid,date);return`<div class="face-card" id="pcard-${s.id}"><div class="face-avatar">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div class="face-name">${s.name.split(' ')[0]}</div><div class="part-btns"><button class="part-btn part-check${p.c>0?' active':''}" onclick="addPart('${s.id}','${gid}','${date}','c')">✓</button><button class="part-btn part-x${p.x>0?' active':''}" onclick="addPart('${s.id}','${gid}','${date}','x')">✗</button></div><div class="part-tally">${p.c}✓  ${p.x}✗</div></div>`;}).join('')}</div>`;
+}
+
+function renderBehaviour(body){
+  const gid=activeGroup();
+  body.innerHTML=`<div style="display:flex;align-items:center"><div style="flex:1">${groupTabsHTML(gid)}</div><button class="btn btn-sm btn-secondary" style="flex-shrink:0;margin-right:12px" onclick="openBehTagEditor()">Edit Tags</button></div><div id="beh-body"></div>`;
+  renderBehBody();
+}
+function renderBehBody(){
+  const body=document.getElementById('beh-body');if(!body)return;
+  const gid=activeGroup();if(!gid)return;
+  const tl=S.behavior.filter(b=>b.gid===gid&&b.date===todayStr());
+  body.innerHTML=`<div style="padding:10px 16px 4px;font-size:12px;color:var(--text3)">Tap a student to log a behaviour</div>
+  <div class="face-grid">${groupStudents(gid).map(s=>{const cnt=tl.filter(b=>b.sid===s.id).length;return`<div class="face-card" onclick="openBehModal('${s.id}','${gid}')"><div class="face-avatar">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div class="face-name">${s.name.split(' ')[0]}</div>${cnt>0?`<div style="font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 6px;border-radius:10px">${cnt} log${cnt!==1?'s':''}</div>`:'<div style="font-size:10px;color:var(--text3)">No logs</div>'}</div>`;}).join('')}</div>
+  <div style="padding:0 16px 4px;display:flex;align-items:center;justify-content:space-between"><div class="section-label" style="padding:12px 0 8px">Today's Log</div><button class="btn btn-sm btn-secondary" onclick="S.behStudent=null;S.section='beh-history';render()">View All</button></div>
+  <div class="card" style="margin-bottom:16px">${tl.length===0?`<div style="padding:16px;text-align:center;font-size:13px;color:var(--text3)">No behaviour logs today</div>`:tl.slice().reverse().map(b=>{const st=S.students.find(x=>x.id===b.sid);const tag=S.behaviorTags.find(t=>t.id===b.tid)||{label:b.label,type:b.type};return`<div class="beh-log-item"><div class="beh-dot" style="background:${tag.type==='pos'?'var(--green)':'var(--red)'}"></div><div class="avatar" style="width:30px;height:30px;font-size:10px">${st?.photo?`<img src="${st.photo}">`:`<span>${initials(st?.name||'?')}</span>`}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${st?.name||'Unknown'}</div><div style="font-size:12px;color:var(--text3)">${tag.label} · ${fmtTime(b.ts)}</div></div></div>`;}).join('')}</div>`;
+}
+function openBehModal(sid,gid){S.sheet={type:'beh-modal',sid,gid};renderSheet()}
+function renderBehHistory(c){
+  const sid=S.behStudent,st=sid?S.students.find(x=>x.id===sid):null;
+  const logs=(sid?S.behavior.filter(b=>b.sid===sid):S.behavior).slice().sort((a,b)=>b.ts-a.ts);
+  c.innerHTML=`<div class="page-header"><div style="display:flex;align-items:center;gap:10px"><button class="btn-icon" onclick="S.section='daily';S.dailyTab='behaviour';render()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="page-title">${st?st.name+' — Behaviour':'All Behaviour Logs'}</div></div></div>
+  <div class="card" style="margin-top:12px;margin-bottom:16px">${logs.length===0?`<div style="padding:24px;text-align:center;font-size:13px;color:var(--text3)">No logs yet</div>`:logs.map(b=>{const s2=S.students.find(x=>x.id===b.sid);const g=S.groups.find(x=>x.id===b.gid);const tag=S.behaviorTags.find(t=>t.id===b.tid)||{label:b.label,type:b.type};return`<div class="beh-log-item"><div class="beh-dot" style="background:${tag.type==='pos'?'var(--green)':'var(--red)'}"></div>${!sid?`<div class="avatar" style="width:30px;height:30px;font-size:10px">${s2?.photo?`<img src="${s2.photo}">`:`<span>${initials(s2?.name||'?')}</span>`}</div>`:''}<div style="flex:1;min-width:0">${!sid?`<div style="font-size:13px;font-weight:500">${s2?.name||'Unknown'}</div>`:''}<div style="font-size:${sid?'14':'12'}px">${tag.label}</div><div style="font-size:11px;color:var(--text3)">${fmtDate(b.date)} ${fmtTime(b.ts)}${g?' · '+g.name:''}</div></div><button onclick="deleteBehLog('${b.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:0 4px">×</button></div>`;}).join('')}</div>`;
+}
+function deleteBehLog(id){if(!confirm('Delete this log entry?'))return;S.behavior=S.behavior.filter(b=>b.id!==id);save();render()}
+
+function renderTodo(body){
+  const active=S.todos.filter(t=>!t.done),done=S.todos.filter(t=>t.done);
+  body.innerHTML=`<div style="padding:12px 16px 0;display:flex;justify-content:flex-end"><button class="btn btn-primary btn-sm" onclick="openAddTodo()">+ Add Task</button></div>
+  <div class="card" style="margin-top:10px">${active.length===0?`<div style="padding:20px;text-align:center;font-size:13px;color:var(--text3)">No tasks!</div>`:active.map(todoItemHTML).join('')}</div>
+  ${done.length?`<div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="S.showDoneTodos=!S.showDoneTodos;renderTodoInPlace()"><div style="font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Done (${done.length})</div><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transform:rotate(${S.showDoneTodos?180:0}deg)"><polyline points="6 9 12 15 18 9"/></svg></div>${S.showDoneTodos?`<div class="card" style="margin-bottom:16px">${done.map(todoItemHTML).join('')}</div>`:''}`:''}`;
+}
+function renderTodoInPlace(){const b=document.getElementById('daily-body');if(b)renderTodo(b)}
+function todoItemHTML(t){const g=t.groupId?S.groups.find(x=>x.id===t.groupId):null;const col=g?getColor(g.color):null;return`<div class="todo-item"><div class="todo-check${t.done?' done':''}" onclick="toggleTodo('${t.id}')">${t.done?`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:''}</div><div class="todo-body"><div class="todo-title${t.done?' done':''}">${t.title}</div><div class="todo-meta">${g?`<span class="group-badge ${col.cls}" style="margin-right:4px">${g.name}</span>`:''}${t.due?`Due ${fmtDate(t.due)}`:''}</div></div><button class="todo-del" onclick="deleteTodo('${t.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`}
+function toggleTodo(id){const t=S.todos.find(x=>x.id===id);if(t){t.done=!t.done;save();renderTodoInPlace()}}
+function deleteTodo(id){S.todos=S.todos.filter(t=>t.id!==id);save();renderTodoInPlace()}
+
+function renderRecords(c){
+  const tabs=[{id:'grades',label:'Grades'},{id:'checklist',label:'Checklist'},{id:'reports',label:'Reports'},{id:'contacts',label:'Communications'}];
+  const t=S.recordsTab;
+  c.innerHTML=`<div class="page-header"><div class="page-title">Records</div></div>
+  <div style="display:flex;border-bottom:1px solid var(--border);padding:0 8px">${tabs.map(tab=>`<button onclick="S.recordsTab='${tab.id}';render()" style="flex:1;padding:10px 4px;background:none;border:none;border-bottom:2px solid ${tab.id===t?'var(--blue)':'transparent'};color:${tab.id===t?'var(--blue)':'var(--text3)'};cursor:pointer;font-size:11px;font-weight:500">${tab.label}</button>`).join('')}</div>
+  <div id="records-body"></div>`;
+  const body=document.getElementById('records-body');
+  if(t==='grades')renderGrades(body);
+  else if(t==='checklist')renderChecklist(body);
+  else if(t==='reports')renderReports(body);
+  else if(t==='contacts')renderContacts(body);
+}
+
+function renderGrades(body){
+  if(!S.gradesGroup||!S.groups.find(g=>g.id===S.gradesGroup)){
+    S.gradesGroup=activeGroup();
+  }
+  const gid=S.gradesGroup;
+  body.innerHTML=`${groupTabsHTML(gid,'S.gradesGroup=\'%ID%\';S.activeGroup=\'%ID%\';renderGradesInPlace()')}<div class="sub-tabs" id="term-tabs"></div><div class="sub-tabs" style="background:var(--bg2)" id="subj-tabs"></div><div id="grades-body"></div>`;
+  renderGradesInPlace();
+}
+function renderGradesInPlace(){
+  const tt=document.getElementById('term-tabs'),st=document.getElementById('subj-tabs');
+  if(tt)tt.innerHTML=S.terms.map(t=>`<button class="sub-tab${S.gradesTerm===t.id?' active':''}" onclick="S.gradesTerm='${t.id}';renderGradesInPlace()">${t.label}</button>`).join('');
+  if(st)st.innerHTML=SUBJECTS.map(s=>`<button class="sub-tab${S.gradesSubject===s.id?' active':''}" onclick="S.gradesSubject='${s.id}';renderGradesInPlace()">${s.label}</button>`).join('');
+  const body=document.getElementById('grades-body');if(!body)return;
+  const gid=S.gradesGroup||activeGroup();S.gradesGroup=gid;
+  document.querySelectorAll('.group-tabs .group-tab').forEach(el=>{
+    const fn=el.getAttribute('onclick')||'';
+    el.classList.toggle('active',fn.includes("'"+gid+"'"));
+  });
+  const tid=S.gradesTerm,subj=S.gradesSubject;
+  const sub=SUBJECTS.find(s=>s.id===subj),students=groupStudents(gid);
+  if(!students.length){body.innerHTML='<div class="empty"><div class="empty-title">No students in this group</div></div>';return}
+  let html=`<div style="padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border)">`;
+  sub.comps.forEach(comp=>{html+=`<button class="btn btn-sm btn-primary" onclick="openNewAssign('${gid}','${tid}','${subj}','${comp.id}')">+ ${comp.label.split(' ').slice(-1)[0]}</button>`;});
+  html+=`</div>`;
+  html+=`<div style="overflow-x:auto"><table class="grade-table"><thead><tr><th>Student</th>`;
+  sub.comps.forEach(c=>{html+=`<th>${c.label.split(' ').slice(-1)[0]}<br><span style="font-size:10px;color:var(--text3)">${c.w}%</span></th>`});
+  html+=`<th>Avg</th></tr></thead><tbody>`;
+  students.forEach(s=>{
+    html+=`<tr><td><div style="font-size:13px;font-weight:500">${s.name.split(' ')[0]}</div>${s.iep?`<span class="tag" style="background:var(--amber-bg);color:var(--amber);font-size:10px">IEP</span>`:''}</td>`;
+    sub.comps.forEach(comp=>{
+      const avg=compAvgDirect(s.id,gid,tid,subj,comp.id);
+      const ac=compAssigns(gid,tid,subj,comp.id).length;
+      html+=`<td onclick="openCompAssigns('${gid}','${tid}','${subj}','${comp.id}')" style="cursor:pointer">${avg!==null?`${levelBadge(pctToLevel(avg))}<br><span style="font-size:10px;color:var(--text3)">${avg.toFixed(0)}% (${ac})</span>`:`<span style="color:var(--blue);font-size:12px">+ Add</span>`}</td>`;
+    });
+    const sA=subjectAvg(s.id,gid,tid,subj);
+    html+=`<td>${sA!==null?`${levelBadge(pctToLevel(sA))}<br><span style="font-size:10px;color:var(--text3)">${sA.toFixed(0)}%</span>`:'—'}</td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  sub.comps.forEach(comp=>{
+    const as=compAssigns(gid,tid,subj,comp.id);
+    html+=`<div class="section-label"><span>${comp.label}</span></div>`;
+    if(!as.length){html+=`<div style="padding:4px 16px 12px;font-size:13px;color:var(--text3)">No assignments yet</div>`;}
+    else{
+      html+=`<div class="card" style="margin-bottom:8px">`;
+      as.forEach(a=>{
+        const scores=students.map(s=>getScore(s.id,a.id)).filter(x=>x&&!x.modified);
+        const entered=students.filter(s=>getScore(s.id,a.id)).length;
+        const avg=scores.length?scores.reduce((t,x)=>t+(x.scored/a.possible*100),0)/scores.length:null;
+        html+=`<div class="student-row" onclick="S.currentAssign='${a.id}';S.section='grade-entry';render()">
+          <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500">${a.name}</div><div style="font-size:12px;color:var(--text3)">${fmtDate(a.date)} · /${a.possible} · ${entered}/${students.length} entered</div></div>
+          ${avg!==null?`<div style="margin-right:8px">${levelBadge(pctToLevel(avg))}</div>`:''}
+          <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+  });
+  body.innerHTML=html;
+}
+function openCompAssigns(gid,tid,subj,comp){S.gradesGroup=gid;S.gradesTerm=tid;S.gradesSubject=subj;renderGradesInPlace()}
+function openNewAssign(gid,tid,subj,comp){S.sheet={type:'new-assign',gid,tid,subj,comp,name:'',date:todayStr(),possible:''};renderSheet()}
+function saveNewAssign(){
+  const sh=S.sheet;
+  if(!sh.name.trim()||!sh.possible||isNaN(parseFloat(sh.possible))||parseFloat(sh.possible)<=0){alert('Please fill in all fields');return}
+  const a={id:'ga'+Date.now(),groupId:sh.gid,termId:sh.tid,subj:sh.subj,comp:sh.comp,name:sh.name.trim(),date:sh.date,possible:parseFloat(sh.possible)};
+  S.gassign.push(a);save();S.currentAssign=a.id;S.gradesGroup=sh.gid;S.gradesTerm=sh.tid;S.gradesSubject=sh.subj;
+  closeSheet();S.section='grade-entry';render();
+}
+function renderGradeEntry(c){
+  const a=S.gassign.find(x=>x.id===S.currentAssign);
+  if(!a){S.section='records';render();return}
+  const sub=SUBJECTS.find(x=>x.id===a.subj),comp=sub?.comps.find(x=>x.id===a.comp),term=S.terms.find(x=>x.id===a.termId);
+  const students=groupStudents(a.groupId);
+  if(!window._ge)window._ge={};
+  c.innerHTML=`<div class="page-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-icon" onclick="window._ge={};S.section='records';render()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div><div class="page-title">${a.name}</div><div style="font-size:12px;color:var(--text3)">${comp?.label} · ${term?.label} · /${a.possible}</div></div>
+    </div>
+    <button class="btn-icon" onclick="deleteAssign('${a.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+  </div>
+  <div class="card" style="margin-top:12px">
+    ${students.map(s=>{
+      const ex=getScore(s.id,a.id);
+      const val=window._ge[s.id]!==undefined?window._ge[s.id]:(ex?String(ex.scored):'');
+      const pct=val!==''&&!isNaN(parseFloat(val))?parseFloat(val)/a.possible*100:null;
+      return`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)">
+        <div class="avatar" style="width:36px;height:36px;font-size:12px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div>
+        <div style="flex:1;font-size:13px;font-weight:500">${s.name}${s.iep?` <span style="font-size:10px;color:var(--amber)">IEP</span>`:''}</div>
+        <input type="number" min="0" max="${a.possible}" step="0.5" value="${val}" placeholder="—"
+          style="width:64px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 8px;color:var(--text);font-size:14px;text-align:center;outline:none"
+          id="gi-${s.id}">
+        <div style="width:40px;text-align:center" id="gp-${s.id}">${pct!==null?levelBadge(pctToLevel(pct)):''}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div style="padding:12px 16px;display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn btn-secondary" onclick="window._ge={};S.section='records';render()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveAllGrades('${a.id}',${a.possible})">Save All Grades</button>
+  </div>`;
+  students.forEach(s=>{
+    const input=document.getElementById('gi-'+s.id);
+    if(input)input.oninput=function(){window._ge[s.id]=this.value;const p=this.value!==''&&!isNaN(parseFloat(this.value))?parseFloat(this.value)/a.possible*100:null;const el=document.getElementById('gp-'+s.id);if(el)el.innerHTML=p!==null?levelBadge(pctToLevel(p)):''};
+  });
+}
+function saveAllGrades(aid,possible){
+  const a=S.gassign.find(x=>x.id===aid);if(!a)return;
+  const students=groupStudents(a.groupId),edits=window._ge||{};
+  students.forEach(s=>{
+    if(edits[s.id]===undefined)return;
+    const val=String(edits[s.id]).trim(),k=s.id+'__'+aid;
+    if(val===''||val==='null'){delete S.grades[k];}
+    else{const sc=parseFloat(val);if(!isNaN(sc))S.grades[k]={scored:sc,aid,modified:false};}
+  });
+  save();window._ge={};S.section='records';render();
+}
+function deleteAssign(id){
+  if(!confirm('Delete this assignment and all its grades?'))return;
+  S.gassign=S.gassign.filter(a=>a.id!==id);
+  Object.keys(S.grades).forEach(k=>{if(k.endsWith('__'+id))delete S.grades[k]});
+  save();window._ge={};S.section='records';render();
+}
+
+function renderChecklist(body){
+  const gid=S.checkGroup||activeGroup();S.checkGroup=gid;
+  const as=S.assignments.filter(a=>a.groupId===gid&&!a.archived);
+  body.innerHTML=`${groupTabsHTML(gid,'S.checkGroup=\'%ID%\';S.activeGroup=\'%ID%\';const rb=document.getElementById(\'records-body\');if(rb)renderChecklist(rb)')}<div style="padding:10px 16px;display:flex;justify-content:flex-end"><button class="btn btn-primary btn-sm" onclick="openAddAssignment('${gid}')">+ Assignment</button></div>
+  ${as.length===0?`<div class="empty"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><div class="empty-title">No assignments yet</div></div>`
+  :as.map(a=>{const students=groupStudents(gid),sub=students.filter(s=>(S.checklist[a.id]||{})[s.id]).length;return`<div class="card"><div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:14px;font-weight:600">${a.title}</div><div style="font-size:12px;color:var(--text3)">${a.due?`Due ${fmtDate(a.due)} · `:''}${sub}/${students.length} submitted</div></div><button class="btn btn-sm btn-secondary" onclick="archiveAssignment('${a.id}')">Archive</button></div>${students.map(s=>{const sb=(S.checklist[a.id]||{})[s.id]||false;return`<div class="check-row"><div class="sub-toggle${sb?' submitted':''}" onclick="toggleSubmit('${a.id}','${s.id}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="avatar" style="width:32px;height:32px;font-size:11px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div style="flex:1;font-size:13px;font-weight:500">${s.name}</div><div style="font-size:12px;color:${sb?'var(--green)':'var(--text3)'}">${sb?'Submitted':'Missing'}</div></div>`;}).join('')}</div>`;}).join('')}`;
+}
+function toggleSubmit(aid,sid){if(!S.checklist[aid])S.checklist[aid]={};S.checklist[aid][sid]=!S.checklist[aid][sid];save();const body=document.getElementById('records-body');if(body)renderChecklist(body)}
+function archiveAssignment(id){const a=S.assignments.find(x=>x.id===id);if(a){a.archived=true;save();const body=document.getElementById('records-body');if(body)renderChecklist(body)}}
+function openAddAssignment(gid){S.sheet={type:'add-assignment',gid,title:'',due:''};renderSheet()}
+function saveAssignment(){const sh=S.sheet;if(!sh.title.trim()){alert('Please enter a title');return}S.assignments.push({id:'a'+Date.now(),groupId:sh.gid,title:sh.title.trim(),due:sh.due,archived:false});save();closeSheet()}
+
+function renderReports(body){
+  const gid=S.reportGroup||activeGroup();S.reportGroup=gid;
+  const types=[{id:'behaviour',label:'Behaviour'},{id:'attendance',label:'Attendance'},{id:'participation',label:'Participation'},{id:'grades',label:'Grades'}];
+  body.innerHTML=`${groupTabsHTML(gid,'S.reportGroup=\'%ID%\';S.activeGroup=\'%ID%\';renderReportsInPlace()')}<div class="sub-tabs">${types.map(t=>`<button class="sub-tab${S.reportType===t.id?' active':''}" onclick="S.reportType='${t.id}';renderReportsInPlace()">${t.label}</button>`).join('')}</div><div id="report-body"></div>`;
+  renderReportsInPlace();
+}
+function renderReportsInPlace(){
+  const body=document.getElementById('report-body');if(!body)return;
+  const gid=S.reportGroup||activeGroup();S.reportGroup=gid;
+  document.querySelectorAll('.group-tabs .group-tab').forEach(el=>{
+    const fn=el.getAttribute('onclick')||'';
+    el.classList.toggle('active',fn.includes("'"+gid+"'"));
+  });
+  const students=groupStudents(gid),t=S.reportType;
+  if(t==='behaviour'){
+    const tc={};S.behavior.filter(b=>b.gid===gid).forEach(b=>{tc[b.label]=(tc[b.label]||0)+1});
+    const sc=students.map(s=>({name:s.name.split(' ')[0],count:S.behavior.filter(b=>b.sid===s.id&&b.gid===gid).length})).sort((a,b)=>b.count-a.count);
+    const mx=Math.max(...sc.map(x=>x.count),1),ta=Object.entries(tc).sort((a,b)=>b[1]-a[1]),mt=Math.max(...ta.map(x=>x[1]),1);
+    body.innerHTML=`<div class="section-label">By Student</div><div class="bar-wrap">${sc.map(x=>`<div class="bar-row"><div class="bar-label">${x.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.count/mx*100).toFixed(0)}%;background:var(--amber)"></div></div><div class="bar-val">${x.count}</div></div>`).join('')}</div><div class="section-label">By Tag</div><div class="bar-wrap">${ta.map(([l,n])=>{const tag=S.behaviorTags.find(t=>t.label===l);return`<div class="bar-row"><div class="bar-label">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/mt*100).toFixed(0)}%;background:${tag?.type==='pos'?'var(--green)':'var(--red)'}"></div></div><div class="bar-val">${n}</div></div>`}).join('')}</div>`;
+  } else if(t==='attendance'){
+    const data=students.map(s=>{const ab=Object.entries(S.attendance).filter(([k])=>k.startsWith(gid+'__')).reduce((n,[,v])=>n+(v[s.id]==='absent'?1:0),0);const lt=Object.entries(S.attendance).filter(([k])=>k.startsWith(gid+'__')).reduce((n,[,v])=>n+(v[s.id]==='late'?1:0),0);return{name:s.name.split(' ')[0],ab,lt}}).sort((a,b)=>b.ab-a.ab);
+    const mx=Math.max(...data.map(x=>x.ab),1);
+    body.innerHTML=`<div class="section-label">Absences by Student</div><div class="bar-wrap">${data.map(x=>`<div class="bar-row"><div class="bar-label">${x.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.ab/mx*100).toFixed(0)}%;background:var(--red)"></div></div><div class="bar-val">${x.ab}A ${x.lt}L</div></div>`).join('')}</div>`;
+  } else if(t==='participation'){
+    const data=students.map(s=>{let tc=0,tx=0;Object.entries(S.participation).filter(([k])=>k.startsWith(gid+'__')).forEach(([,v])=>{if(v[s.id]){tc+=v[s.id].c||0;tx+=v[s.id].x||0}});return{name:s.name.split(' ')[0],c:tc,x:tx}}).sort((a,b)=>b.c-a.c);
+    const mx=Math.max(...data.map(x=>x.c+x.x),1);
+    body.innerHTML=`<div class="section-label">Participation Tally</div><div class="bar-wrap">${data.map(x=>`<div class="bar-row"><div class="bar-label">${x.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.c/mx*100).toFixed(0)}%;background:var(--green)"></div></div><div class="bar-val">${x.c}✓ ${x.x}✗</div></div>`).join('')}</div>`;
+  } else if(t==='grades'){
+    const tid=S.gradesTerm;
+    body.innerHTML=`<div style="padding:8px 16px"><div class="sub-tabs">${S.terms.map(t=>`<button class="sub-tab${S.gradesTerm===t.id?' active':''}" onclick="S.gradesTerm='${t.id}';renderReportsInPlace()">${t.label}</button>`).join('')}</div></div>`+SUBJECTS.map(sub=>{const data=students.map(s=>{const avg=subjectAvg(s.id,gid,tid,sub.id);return{name:s.name.split(' ')[0],avg}}).filter(x=>x.avg!==null);if(!data.length)return`<div class="section-label">${sub.label} — no data</div>`;return`<div class="section-label">${sub.label}</div><div class="bar-wrap">${data.map(x=>`<div class="bar-row"><div class="bar-label">${x.name}</div><div class="bar-track"><div class="bar-fill" style="width:${x.avg.toFixed(0)}%;background:var(--blue)"></div></div><div class="bar-val">${levelBadge(pctToLevel(x.avg))}</div></div>`).join('')}</div>`;}).join('');
+  }
+}
+
+function renderContacts(body){
+  const gid=activeGroup(),students=groupStudents(gid);
+  body.innerHTML=`${groupTabsHTML(gid)}<div class="card" style="margin-top:12px">${students.map(s=>{const cnt=S.contacts.filter(c=>c.sid===s.id).length;return`<div class="student-row" onclick="S.contactStudent='${s.id}';S.section='contact-detail';render()"><div class="avatar" style="width:36px;height:36px;font-size:12px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div class="student-info"><div class="student-name">${s.name}</div><div class="student-meta">${cnt} communication${cnt!==1?'s':''}</div></div><div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`;}).join('')}</div>`;
+}
+function renderContactDetail(c){
+  const s=S.students.find(x=>x.id===S.contactStudent);
+  const logs=S.contacts.filter(c=>c.sid===S.contactStudent).slice().sort((a,b)=>b.ts-a.ts);
+  const methods={call:'📞 Call',email:'✉️ Email',inperson:'🤝 In Person',note:'📝 Note Home'};
+  c.innerHTML=`<div class="page-header"><div style="display:flex;align-items:center;gap:10px"><button class="btn-icon" onclick="S.section='records';S.recordsTab='contacts';render()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="page-title">${s?.name} — Communications</div></div><button class="btn-sm btn-primary" onclick="openAddContact('${S.contactStudent}')">+ Log</button></div>
+  <div class="card" style="margin-top:12px;margin-bottom:16px">${logs.length===0?`<div style="padding:24px;text-align:center;font-size:13px;color:var(--text3)">No communications logged yet</div>`:logs.map(l=>`<div class="contact-item"><div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:13px;font-weight:600">${methods[l.method]||l.method}</div><div style="display:flex;align-items:center;gap:8px"><div style="font-size:11px;color:var(--text3)">${fmtDate(l.date)}</div><button onclick="deleteContact('${l.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">×</button></div></div>${l.notes?`<div style="font-size:13px;color:var(--text2);margin-top:4px">${l.notes}</div>`:''}</div>`).join('')}</div>`;
+}
+function openAddContact(sid){S.sheet={type:'add-contact',sid,method:'call',date:todayStr(),notes:''};renderSheet()}
+function saveContact(){const sh=S.sheet;S.contacts.push({id:'c'+Date.now(),sid:sh.sid,method:sh.method,date:sh.date,notes:sh.notes,ts:Date.now()});save();closeSheet()}
+function deleteContact(id){S.contacts=S.contacts.filter(c=>c.id!==id);save();render()}
+
+// ── PLANNING ────────────────────────────────────────────
+function renderPlanning(c){
+  const tabs=[{id:'schedule',label:'Schedule'},{id:'subnotes',label:'Sub Notes'},{id:'calendar',label:'Calendar'}];
+  const t=S.planTab||'schedule';S.planTab=t;
+  c.innerHTML=`<div class="page-header"><div class="page-title">Planning</div></div>
+  <div style="display:flex;border-bottom:1px solid var(--border);padding:0 8px">${tabs.map(tab=>`<button id="plan-tab-${tab.id}" onclick="S.planTab='${tab.id}';renderPlanningInPlace()" style="flex:1;padding:10px 4px;background:none;border:none;border-bottom:2px solid ${tab.id===t?'var(--blue)':'transparent'};color:${tab.id===t?'var(--blue)':'var(--text3)'};cursor:pointer;font-size:11px;font-weight:500">${tab.label}</button>`).join('')}</div>
+  <div id="plan-body"></div>`;
+  renderPlanningInPlace();
+}
+function renderPlanningInPlace(){
+  const body=document.getElementById('plan-body');if(!body)return;
+  const t=S.planTab||'schedule';
+  // Sync tab highlight
+  ['schedule','subnotes','calendar'].forEach(id=>{
+    const btn=document.getElementById('plan-tab-'+id);
+    if(!btn)return;
+    const active=id===t;
+    btn.style.borderBottom=`2px solid ${active?'var(--blue)':'transparent'}`;
+    btn.style.color=active?'var(--blue)':'var(--text3)';
+  });
+  if(t==='schedule')renderSchedule(body);
+  else if(t==='calendar')renderCalendar(body);
+  else if(t==='subnotes')renderSubNotes(body);
+}
+
+// ── SUB NOTES ────────────────────────────────────────────
+const DEFAULT_SUB_PROMPTS=[
+  {id:'sp1',q:'Teacher name & contact'},
+  {id:'sp2',q:'School name & room number'},
+  {id:'sp3',q:'Start time / End time'},
+  {id:'sp4',q:'Groups / Classes you will see today'},
+  {id:'sp5',q:'Daily schedule overview'},
+  {id:'sp6',q:'Where to find the lesson plans'},
+  {id:'sp7',q:'Attendance — how and when to take it'},
+  {id:'sp8',q:'Students with IEPs or special needs to be aware of'},
+  {id:'sp9',q:'Allergies or medical conditions'},
+  {id:'sp10',q:'Students who may need extra support or redirection'},
+  {id:'sp11',q:'Classroom rules and expectations'},
+  {id:'sp12',q:'Behaviour management strategies that work'},
+  {id:'sp13',q:'Emergency / fire drill procedure'},
+  {id:'sp14',q:'Who to call if you need help (name & room)'},
+  {id:'sp15',q:'Washroom / water break routine'},
+  {id:'sp16',q:'Technology — passwords or devices students use'},
+  {id:'sp17',q:'End of day routine'},
+  {id:'sp18',q:'Please leave a note about how the day went'},
+];
+
+function getSubNotes(){
+  if(!S.subNotes){
+    S.subNotes=DEFAULT_SUB_PROMPTS.map(p=>({id:p.id,q:p.q,a:''}));
+    save();
+  }
+  return S.subNotes;
+}
+
+function renderSubNotes(body){
+  const notes=getSubNotes();
+  body.innerHTML=`
+    <div style="padding:10px 16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-sm btn-secondary" onclick="copySubNotes()">Copy to Clipboard</button>
+      <button class="btn btn-sm btn-primary" onclick="openAddSubPrompt()">+ Add Field</button>
+    </div>
+    <div style="padding:0 16px 24px;display:flex;flex-direction:column;gap:12px">
+      ${notes.map((n,i)=>`
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+          <div style="padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);flex:1">${n.q}</div>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <button onclick="openEditSubPrompt(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:2px 6px">Edit</button>
+              <button onclick="deleteSubPrompt(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;padding:0 4px">×</button>
+            </div>
+          </div>
+          <textarea
+            style="width:100%;background:transparent;border:none;padding:10px 12px;color:var(--text);font-size:13px;resize:none;outline:none;line-height:1.6;min-height:60px;font-family:inherit"
+            placeholder="Your answer..."
+            oninput="saveSubAnswer(${i},this.value);autoResize(this)"
+            onload="autoResize(this)"
+          >${n.a}</textarea>
+        </div>
+      `).join('')}
+    </div>`;
+  // auto-resize all textareas after render
+  body.querySelectorAll('textarea').forEach(ta=>autoResize(ta));
+}
+
+function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
+
+function saveSubAnswer(i,val){
+  const notes=getSubNotes();
+  if(notes[i])notes[i].a=val;
+  save();
+}
+
+function openAddSubPrompt(){
+  S.sheet={type:'sub-prompt',mode:'add',q:''};renderSheet();
+}
+function openEditSubPrompt(i){
+  const notes=getSubNotes();
+  S.sheet={type:'sub-prompt',mode:'edit',idx:i,q:notes[i].q};renderSheet();
+}
+function saveSubPrompt(){
+  const sh=S.sheet;
+  if(!sh.q.trim()){alert('Please enter a question or prompt.');return}
+  const notes=getSubNotes();
+  if(sh.mode==='add'){
+    notes.push({id:'sp'+Date.now(),q:sh.q.trim(),a:''});
+  } else {
+    notes[sh.idx].q=sh.q.trim();
+  }
+  save();closeSheet();
+}
+function deleteSubPrompt(i){
+  if(!confirm('Remove this field?'))return;
+  getSubNotes().splice(i,1);
+  save();
+  const body=document.getElementById('plan-body');if(body)renderSubNotes(body);
+}
+
+function copySubNotes(){
+  const notes=getSubNotes();
+  const text=notes.map(n=>`${n.q}\n${n.a||'—'}`).join('\n\n');
+  navigator.clipboard.writeText(text)
+    .then(()=>showToast('✓ Sub notes copied!'))
+    .catch(()=>{
+      const ta=document.createElement('textarea');
+      ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      document.execCommand('copy');ta.remove();showToast('✓ Sub notes copied!');
+    });
+}
+function renderCalendar(body){
+  const MONTHS=[
+    {y:2025,m:7},{y:2025,m:8},{y:2025,m:9},{y:2025,m:10},{y:2025,m:11},
+    {y:2026,m:0},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4},{y:2026,m:5}
+  ];
+  const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const today=new Date(),td=today.getDate(),tm=today.getMonth(),ty=today.getFullYear();
+
+  // Cell dimensions — generous for Apple Pencil writing
+  const CW=56,CH=72,DAY_HEADER=22,MONTH_HEADER=44,GAP=32,PAD=16;
+  const CANVAS_W=CW*7+PAD*2;
+
+  // Pre-calculate each month's Y offset on the single canvas
+  const monthMeta=MONTHS.map(({y,m})=>{
+    const first=new Date(y,m,1).getDay(); // 0=Sun
+    const dim=new Date(y,m+1,0).getDate();
+    const rows=Math.ceil((first+dim)/7);
+    return{y,m,first,dim,rows,h:MONTH_HEADER+DAY_HEADER+rows*CH};
+  });
+  let cursor=PAD;
+  monthMeta.forEach(mm=>{mm.offsetY=cursor;cursor+=mm.h+GAP;});
+  const CANVAS_H=cursor+PAD;
+
+  // Build single SVG
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}" width="${CANVAS_W}" height="${CANVAS_H}" style="display:block">`;
+
+  // Background
+  svg+=`<rect width="${CANVAS_W}" height="${CANVAS_H}" fill="#f9eae1"/>`;
+
+  const days=['S','M','T','W','T','F','S'];
+
+  monthMeta.forEach(({y,m,first,dim,rows,h,offsetY})=>{
+    const oy=offsetY;
+
+    // Month card background
+    svg+=`<rect x="${PAD/2}" y="${oy}" width="${CANVAS_W-PAD}" height="${h}" rx="10" fill="#fff8f4" stroke="#e0c8be" stroke-width="1"/>`;
+
+    // Month title bar
+    svg+=`<rect x="${PAD/2}" y="${oy}" width="${CANVAS_W-PAD}" height="${MONTH_HEADER}" rx="10" fill="#f0e0d6"/>`;
+    svg+=`<rect x="${PAD/2}" y="${oy+MONTH_HEADER-6}" width="${CANVAS_W-PAD}" height="6" fill="#f0e0d6"/>`;
+    svg+=`<text x="${CANVAS_W/2}" y="${oy+MONTH_HEADER/2+6}" text-anchor="middle" font-size="17" font-weight="700" fill="#2a1a1a" font-family="system-ui,sans-serif">${MN[m]} ${y}</text>`;
+
+    // Day-of-week headers
+    days.forEach((d,i)=>{
+      const x=PAD+i*CW+CW/2;
+      const isWknd=i===0||i===6;
+      svg+=`<text x="${x}" y="${oy+MONTH_HEADER+DAY_HEADER-5}" text-anchor="middle" font-size="11" font-weight="600" fill="${isWknd?'#cc8b86':'#9a7070'}" font-family="system-ui,sans-serif">${d}</text>`;
+    });
+
+    // Divider under day headers
+    svg+=`<line x1="${PAD}" y1="${oy+MONTH_HEADER+DAY_HEADER}" x2="${CANVAS_W-PAD}" y2="${oy+MONTH_HEADER+DAY_HEADER}" stroke="#e0c8be" stroke-width="0.75"/>`;
+
+    // Vertical column dividers
+    for(let i=1;i<7;i++){
+      const x=PAD+i*CW;
+      svg+=`<line x1="${x}" y1="${oy+MONTH_HEADER+DAY_HEADER}" x2="${x}" y2="${oy+h}" stroke="#1e2130" stroke-width="0.5"/>`;
+    }
+
+    // Day cells
+    for(let row=0;row<rows;row++){
+      for(let col=0;col<7;col++){
+        const dayNum=row*7+col-first+1;
+        if(dayNum<1||dayNum>dim)continue;
+        const x=PAD+col*CW;
+        const cy=oy+MONTH_HEADER+DAY_HEADER+row*CH;
+        const isToday=dayNum===td&&m===tm&&y===ty;
+        const isWknd=col===0||col===6;
+
+        // Cell fill
+        if(isToday){
+          svg+=`<rect x="${x+1}" y="${cy+1}" width="${CW-2}" height="${CH-2}" fill="#1a2040"/>`;
+          svg+=`<rect x="${x+1}" y="${cy+1}" width="${CW-2}" height="${CH-2}" fill="none" stroke="#4f7cff" stroke-width="1.5" rx="2"/>`;
+        } else if(isWknd){
+          svg+=`<rect x="${x+1}" y="${cy+1}" width="${CW-2}" height="${CH-2}" fill="#161820"/>`;
+        }
+
+        // Horizontal row dividers
+        if(row>0){
+          svg+=`<line x1="${PAD}" y1="${cy}" x2="${CANVAS_W-PAD}" y2="${cy}" stroke="#1e2130" stroke-width="0.5"/>`;
+        }
+
+        // Day number
+        if(isToday){
+          svg+=`<circle cx="${x+14}" cy="${cy+13}" r="10" fill="#4f7cff"/>`;
+          svg+=`<text x="${x+14}" y="${cy+17}" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff" font-family="system-ui,sans-serif">${dayNum}</text>`;
+        } else {
+          svg+=`<text x="${x+8}" y="${cy+16}" font-size="11" font-weight="500" fill="${isWknd?'#374151':'#4b5563'}" font-family="system-ui,sans-serif">${dayNum}</text>`;
+        }
+
+        // Writing lines — 4 faint ruled lines per cell for pencil
+        for(let li=0;li<4;li++){
+          const ly=cy+26+li*11;
+          if(ly<cy+CH-4)svg+=`<line x1="${x+4}" y1="${ly}" x2="${x+CW-4}" y2="${ly}" stroke="#1c1f2e" stroke-width="0.6"/>`;
+        }
+      }
+    }
+  });
+
+  // Today indicator label at very top
+  svg+=`<text x="${CANVAS_W/2}" y="12" text-anchor="middle" font-size="9" fill="#cdb0a6" font-family="system-ui,sans-serif">Aug 2025 – Jun 2026  ·  Use Apple Pencil to annotate</text>`;
+
+  svg+=`</svg>`;
+
+  body.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0">
+      <button class="btn btn-secondary btn-sm" onclick="calZoom(-0.25)" style="font-size:18px;line-height:1;padding:4px 14px">−</button>
+      <div id="cal-zoom-label" style="font-size:12px;color:var(--text3);min-width:42px;text-align:center">100%</div>
+      <button class="btn btn-secondary btn-sm" onclick="calZoom(+0.25)" style="font-size:18px;line-height:1;padding:4px 14px">+</button>
+      <div style="width:1px;height:20px;background:var(--border2);margin:0 4px"></div>
+      <button class="btn btn-secondary btn-sm" onclick="calFit()" style="font-size:11px">Fit</button>
+      <button class="btn btn-secondary btn-sm" onclick="calToday()" style="font-size:11px">Today</button>
+      <div style="flex:1"></div>
+      <div style="font-size:11px;color:var(--text3)">✏️ Pencil ready</div>
+    </div>
+    <div id="cal-viewport" style="position:relative;width:100%;height:calc(100vh - 212px);overflow:hidden;background:#f9eae1;touch-action:none;cursor:grab">
+      <div id="cal-canvas" style="position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform">
+        ${svg}
+      </div>
+    </div>`;
+
+  // ── Interaction ───────────────────────────────────────
+  let zoom=1,panX=0,panY=0;
+  const vp=document.getElementById('cal-viewport');
+  const cv=document.getElementById('cal-canvas');
+
+  function applyView(){
+    cv.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+    const lbl=document.getElementById('cal-zoom-label');
+    if(lbl)lbl.textContent=Math.round(zoom*100)+'%';
+  }
+
+  // Fit calendar width to viewport on load
+  const vpW=vp.clientWidth||360;
+  zoom=Math.min(1,(vpW-8)/CANVAS_W);
+  panX=Math.max(0,(vpW-CANVAS_W*zoom)/2);
+  panY=0;
+  applyView();
+
+  window.calZoom=d=>{
+    const vr=vp.getBoundingClientRect();
+    const cx=vr.width/2,cy=vr.height/2;
+    const nz=Math.min(4,Math.max(0.2,zoom+d));
+    panX=cx-(cx-panX)*(nz/zoom);
+    panY=cy-(cy-panY)*(nz/zoom);
+    zoom=nz;applyView();
+  };
+  window.calFit=()=>{
+    const vpW2=vp.clientWidth||360;
+    zoom=Math.min(1,(vpW2-8)/CANVAS_W);
+    panX=Math.max(0,(vpW2-CANVAS_W*zoom)/2);
+    panY=0;applyView();
+  };
+  window.calToday=()=>{
+    const mm=monthMeta.find(x=>x.m===tm&&x.y===ty);
+    if(!mm)return;
+    const vpH=vp.clientHeight||500;
+    panY=-(mm.offsetY*zoom)+(vpH/2-100);
+    applyView();
+  };
+
+  // Jump to today on load
+  window.calToday();
+
+  // Mouse wheel zoom
+  vp.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const d=e.deltaY>0?-0.12:0.12;
+    const vr=vp.getBoundingClientRect();
+    const mx=e.clientX-vr.left,my=e.clientY-vr.top;
+    const nz=Math.min(4,Math.max(0.2,zoom+d));
+    panX=mx-(mx-panX)*(nz/zoom);
+    panY=my-(my-panY)*(nz/zoom);
+    zoom=nz;applyView();
+  },{passive:false});
+
+  // Mouse drag pan
+  let mp=false,mx0=0,my0=0,px0=0,py0=0;
+  vp.addEventListener('mousedown',e=>{mp=true;mx0=e.clientX;my0=e.clientY;px0=panX;py0=panY;vp.style.cursor='grabbing';e.preventDefault();});
+  document.addEventListener('mousemove',e=>{if(!mp)return;panX=px0+(e.clientX-mx0);panY=py0+(e.clientY-my0);applyView();});
+  document.addEventListener('mouseup',()=>{if(mp){mp=false;vp.style.cursor='grab';}});
+
+  // Touch: pinch zoom + pan
+  let pinching=false,pd0=0,pz0=1,pmx=0,pmy=0,ppx=0,ppy=0,tmx=0,tmy=0,tpx=0,tpy=0;
+  function tDist(e){return Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+
+  vp.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      pinching=true;pd0=tDist(e);pz0=zoom;
+      const vr=vp.getBoundingClientRect();
+      pmx=(e.touches[0].clientX+e.touches[1].clientX)/2-vr.left;
+      pmy=(e.touches[0].clientY+e.touches[1].clientY)/2-vr.top;
+      ppx=panX;ppy=panY;
+    } else if(e.touches.length===1){
+      pinching=false;
+      tmx=e.touches[0].clientX;tmy=e.touches[0].clientY;tpx=panX;tpy=panY;
+    }
+  },{passive:false});
+
+  vp.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===2&&pinching){
+      const nz=Math.min(4,Math.max(0.2,pz0*(tDist(e)/pd0)));
+      panX=pmx-(pmx-ppx)*(nz/pz0);
+      panY=pmy-(pmy-ppy)*(nz/pz0);
+      zoom=nz;applyView();
+    } else if(e.touches.length===1&&!pinching){
+      panX=tpx+(e.touches[0].clientX-tmx);
+      panY=tpy+(e.touches[0].clientY-tmy);
+      applyView();
+    }
+  },{passive:false});
+
+  vp.addEventListener('touchend',e=>{if(e.touches.length<2)pinching=false;});
+}
+
+// ── SCHEDULE ─────────────────────────────────────────────
+function renderSchedule(body){
+  const imgs=S.schedImages||[];
+  body.innerHTML=`
+    <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:12px;color:var(--text3)">${imgs.length?imgs.length+' image'+(imgs.length!==1?'s':''):'No images yet'}</div>
+      <label class="btn btn-primary btn-sm" style="cursor:pointer">+ Upload Image<input type="file" accept="image/*" multiple style="display:none" onchange="addSchedImages(event)"></label>
+    </div>
+    ${imgs.length===0
+      ?`<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="empty-title">No schedule images</div><div class="empty-sub">Tap Upload Image to add photos of your schedule.</div></div>`
+      :`<div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+          ${imgs.map((img,i)=>`
+            <div style="position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
+              <img src="${img}" style="width:100%;display:block">
+              <button onclick="deleteSchedImage(${i})" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+            </div>`).join('')}
+        </div>`}`;
+}
+
+function addSchedImages(e){
+  if(!S.schedImages)S.schedImages=[];
+  const files=Array.from(e.target.files);
+  let done=0;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        const MAX=1200;
+        let w=img.width,h=img.height;
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        S.schedImages.push(canvas.toDataURL('image/jpeg',0.85));
+        done++;
+        if(done===files.length){save();renderPlanningInPlace();}
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function deleteSchedImage(i){
+  if(!confirm('Remove this image?'))return;
+  S.schedImages.splice(i,1);
+  save();renderPlanningInPlace();
+}
+
+// ── JOURNAL ─────────────────────────────────────────────
+function renderJournal(body){
+  const gid=S.journalGroup||activeGroup();S.journalGroup=gid;
+  const date=S.journalDate||todayStr();S.journalDate=date;
+  const entry=S.journal[gid+'__'+date]||'';
+  const recent=Object.entries(S.journal).filter(([k])=>k.startsWith(gid+'__')).map(([k,v])=>({date:k.split('__')[1],text:v})).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  body.innerHTML=`${groupTabsHTML(gid)}
+  ${datBarHTML('journalDate')}
+  <div style="padding:12px 16px">
+    <textarea id="journal-text" rows="8" class="form-input" placeholder="Write your notes for this class today..." style="resize:none;line-height:1.6">${entry}</textarea>
+    <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="saveJournalEntry('${gid}','${date}')">Save Entry</button>
+  </div>
+  ${recent.length?`<div class="section-label">Recent Entries</div><div class="card" style="margin-bottom:16px">${recent.map(e=>`<div style="padding:12px 16px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:13px;font-weight:600">${fmtDate(e.date)}</div><button onclick="deleteJournalEntry('${gid}','${e.date}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">×</button></div><div style="font-size:13px;color:var(--text2);white-space:pre-wrap">${e.text.slice(0,120)}${e.text.length>120?'…':''}</div></div>`).join('')}</div>`:''}`;
+  const dateInput=body.querySelector('input[type=date]');
+  if(dateInput){dateInput.removeAttribute('max');dateInput.onchange=function(){S.journalDate=this.value;renderPlanningInPlace()}}
+  const btns=body.querySelectorAll('.date-nav button');
+  if(btns[0])btns[0].onclick=()=>{S.journalDate=offsetDate(S.journalDate,-1);renderPlanningInPlace()};
+  if(btns[1])btns[1].onclick=()=>{S.journalDate=offsetDate(S.journalDate,1);renderPlanningInPlace()};
+}
+function saveJournalEntry(gid,date){
+  const text=document.getElementById('journal-text')?.value||'';
+  if(text.trim())S.journal[gid+'__'+date]=text;
+  else delete S.journal[gid+'__'+date];
+  save();renderPlanningInPlace();
+}
+function deleteJournalEntry(gid,date){
+  if(!confirm('Delete this journal entry?'))return;
+  delete S.journal[gid+'__'+date];
+  save();renderPlanningInPlace();
+}
+
+// ── STUDENTS ────────────────────────────────────────────
+function renderStudentsHub(c){
+  c.innerHTML=`<div class="page-header"><div class="page-title">Students</div></div>
+  <div class="tile-grid">
+    <div class="tile" onclick="renderAllStudents()"><div class="tile-icon col-blue"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="tile-label">All Profiles</div><div class="tile-sub">${S.students.length} students</div></div>
+    <div class="tile" onclick="S.section='iep-list';render()"><div class="tile-icon col-amber"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><div class="tile-label">IEP Tracker</div><div class="tile-sub">${S.students.filter(s=>s.iep).length} student${S.students.filter(s=>s.iep).length!==1?'s':''}</div></div>
+    <div class="tile" onclick="openSeatingPlan()"><div class="tile-icon col-teal"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></div><div class="tile-label">Seating Plan</div><div class="tile-sub">Drag & arrange</div></div>
+  </div><div id="students-list-area"></div>`;
+}
+function openSeatingPlan(){
+  S.seatGroup=S.seatGroup||activeGroup();
+  S.section='seating-plan';render();
+}
+
+function renderSeatingPlan(c){
+  const gid=S.seatGroup||activeGroup();
+  S.seatGroup=gid;
+  const students=groupStudents(gid);
+  const g=S.groups.find(x=>x.id===gid);
+  const col=g?getColor(g.color):COLORS[0];
+  const posKey='tt_seatpos_'+gid;
+  let positions=JSON.parse(localStorage.getItem(posKey)||'{}');
+  const CARD_W=80,CARD_H=96,PAD=16,COLS=4;
+  students.forEach((s,i)=>{
+    if(!positions[s.id]){
+      const c2=i%COLS,row=Math.floor(i/COLS);
+      positions[s.id]={x:PAD+c2*(CARD_W+12),y:PAD+row*(CARD_H+12),rot:0};
+    }
+    if(positions[s.id].rot===undefined)positions[s.id].rot=0;
+  });
+  // Persist defaults so export always has valid coords
+  localStorage.setItem(posKey,JSON.stringify(positions));
+
+  c.innerHTML=`
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-icon" onclick="S.section='students';render()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="page-title">Seating Plan</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-icon" onclick="resetSeats('${gid}')" title="Reset layout"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.84"/></svg></button>
+      <button class="btn-icon" onclick="exportSeatPNG('${gid}')" title="Export PNG"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+    </div>
+  </div>
+  ${groupTabsHTML(gid,'S.seatGroup=\'%ID%\';S.section=\'seating-plan\';render()')}
+
+  <!-- zoom toolbar -->
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border)">
+    <button class="btn btn-secondary btn-sm" onclick="seatZoom(-0.15)" style="font-size:18px;line-height:1;padding:4px 12px">−</button>
+    <div id="seat-zoom-label" style="font-size:12px;color:var(--text3);min-width:42px;text-align:center">100%</div>
+    <button class="btn btn-secondary btn-sm" onclick="seatZoom(+0.15)" style="font-size:18px;line-height:1;padding:4px 12px">+</button>
+    <div style="width:1px;height:20px;background:var(--border2);margin:0 4px"></div>
+    <button class="btn btn-secondary btn-sm" onclick="seatFitView()" style="font-size:11px">Fit</button>
+    <div style="flex:1"></div>
+    <div style="font-size:11px;color:var(--text3)">Drag · Pinch · Long-press to rotate</div>
+  </div>
+
+  <!-- viewport clipping container -->
+  <div id="seat-viewport" style="position:relative;width:100%;height:calc(100vh - 228px);overflow:hidden;background:var(--bg2);border-top:1px solid var(--border)">
+    <!-- infinite canvas panned via transform -->
+    <div id="seat-canvas" style="position:absolute;top:0;left:0;width:2000px;height:2000px;transform-origin:0 0;will-change:transform">
+      <!-- subtle dot-grid background -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
+        <defs><pattern id="dotgrid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1" fill="#e0c8be"/>
+        </pattern></defs>
+        <rect width="100%" height="100%" fill="url(#dotgrid)"/>
+      </svg>
+
+      ${students.map(s=>{
+        const pos=positions[s.id];
+        const bgColor=col.dot;
+        return`<div class="seat-card" data-sid="${s.id}"
+          style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${CARD_W}px;
+                 transform:rotate(${pos.rot||0}deg);transform-origin:center center;
+                 cursor:grab;user-select:none;-webkit-user-select:none;z-index:1;transition:box-shadow .15s">
+          <!-- rotate handle -->
+          <div class="seat-rot-handle" data-sid="${s.id}"
+               style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+                      width:24px;height:24px;border-radius:50%;background:var(--bg4);
+                      border:1.5px solid var(--border2);display:flex;align-items:center;
+                      justify-content:center;cursor:pointer;z-index:2;opacity:0;transition:opacity .2s">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--text2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.84"/></svg>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;
+                      background:var(--bg3);border:2px solid var(--border2);border-radius:12px;
+                      padding:10px 6px;box-shadow:0 2px 8px rgba(0,0,0,.3)">
+            <div style="width:52px;height:52px;border-radius:50%;background:var(--bg4);
+                        border:2px solid ${bgColor};overflow:hidden;display:flex;align-items:center;
+                        justify-content:center;font-size:16px;font-weight:700;color:${bgColor};flex-shrink:0">
+              ${s.photo?`<img src="${s.photo}" style="width:100%;height:100%;object-fit:cover">`:`<span>${initials(s.name)}</span>`}
+            </div>
+            <div style="font-size:10px;font-weight:600;color:var(--text2);text-align:center;line-height:1.3;word-break:break-word;max-width:68px">
+              ${s.name.split(' ')[0]}<br><span style="color:var(--text3);font-weight:400">${s.name.split(' ').slice(1).join(' ')}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  initSeatingInteraction(gid);
+}
+
+function initSeatingInteraction(gid){
+  const viewport=document.getElementById('seat-viewport');
+  const canvas=document.getElementById('seat-canvas');
+  if(!viewport||!canvas)return;
+
+  const posKey='tt_seatpos_'+gid;
+  let positions=JSON.parse(localStorage.getItem(posKey)||'{}');
+
+  // ── View state ───────────────────────────────────────
+  let zoom=1,panX=0,panY=0;
+  function applyView(){
+    canvas.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+    document.getElementById('seat-zoom-label').textContent=Math.round(zoom*100)+'%';
+  }
+  applyView();
+
+  window.seatZoom=function(delta){
+    zoom=Math.min(2.5,Math.max(0.25,zoom+delta));
+    applyView();
+  };
+  window.seatFitView=function(){
+    zoom=1;panX=0;panY=0;applyView();
+  };
+
+  // ── Helpers ──────────────────────────────────────────
+  function savePos(sid){
+    localStorage.setItem(posKey,JSON.stringify(positions));
+  }
+  function getXY(e){
+    if(e.touches&&e.touches.length)return{x:e.touches[0].clientX,y:e.touches[0].clientY};
+    return{x:e.clientX,y:e.clientY};
+  }
+  // Convert viewport coords → canvas coords
+  function toCanvas(vx,vy){
+    const vr=viewport.getBoundingClientRect();
+    return{x:(vx-vr.left-panX)/zoom,y:(vy-vr.top-panY)/zoom};
+  }
+
+  // ── Drag state ───────────────────────────────────────
+  let dragging=null,dragOffX=0,dragOffY=0,dragMoved=false;
+  let longPressTimer=null;
+
+  // ── Rotate state (mouse) ─────────────────────────────
+  let rotating=null,rotStartAngle=0,rotInitDeg=0;
+
+  // ── Pinch state ──────────────────────────────────────
+  let pinching=false,pinchDist0=0,pinchZoom0=1,pinchMidX=0,pinchMidY=0,pinchPanX0=0,pinchPanY0=0;
+
+  function pinchDist(e){
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    return Math.hypot(dx,dy);
+  }
+
+  // ── Show/hide rotate handles on hover (desktop) ──────
+  canvas.querySelectorAll('.seat-card').forEach(card=>{
+    const handle=card.querySelector('.seat-rot-handle');
+    card.addEventListener('mouseenter',()=>{if(handle)handle.style.opacity='1'});
+    card.addEventListener('mouseleave',()=>{if(handle&&!rotating)handle.style.opacity='0'});
+  });
+
+  // ── Rotate handle mousedown ──────────────────────────
+  canvas.querySelectorAll('.seat-rot-handle').forEach(handle=>{
+    handle.addEventListener('mousedown',e=>{
+      e.stopPropagation();e.preventDefault();
+      const sid=handle.dataset.sid;
+      const card=canvas.querySelector(`.seat-card[data-sid="${sid}"]`);
+      const cr=card.getBoundingClientRect();
+      const cx=cr.left+cr.width/2,cy=cr.top+cr.height/2;
+      rotStartAngle=Math.atan2(e.clientY-cy,e.clientX-cx)*(180/Math.PI);
+      rotInitDeg=positions[sid]?.rot||0;
+      rotating={sid,card,cx,cy};
+      handle.style.opacity='1';
+      document.addEventListener('mousemove',onRotateMove);
+      document.addEventListener('mouseup',onRotateEnd);
+    });
+  });
+
+  function onRotateMove(e){
+    if(!rotating)return;
+    const {sid,card,cx,cy}=rotating;
+    const angle=Math.atan2(e.clientY-cy,e.clientX-cx)*(180/Math.PI);
+    const snap=e.shiftKey?15:1;
+    let deg=rotInitDeg+(angle-rotStartAngle);
+    deg=Math.round(deg/snap)*snap;
+    positions[sid].rot=deg;
+    card.style.transform=`rotate(${deg}deg)`;
+  }
+  function onRotateEnd(){
+    if(!rotating)return;
+    savePos(rotating.sid);
+    document.removeEventListener('mousemove',onRotateMove);
+    document.removeEventListener('mouseup',onRotateEnd);
+    rotating=null;
+  }
+
+  // ── Card pointer events (drag + long-press rotate on touch) ──
+  canvas.querySelectorAll('.seat-card').forEach(card=>{
+    const sid=card.dataset.sid;
+
+    // MOUSE drag
+    card.addEventListener('mousedown',e=>{
+      if(e.target.closest('.seat-rot-handle'))return;
+      e.preventDefault();
+      const cp=toCanvas(e.clientX,e.clientY);
+      dragOffX=cp.x-positions[sid].x;
+      dragOffY=cp.y-positions[sid].y;
+      dragging=card;dragMoved=false;
+      card.style.zIndex=100;card.style.cursor='grabbing';
+      card.style.boxShadow='0 8px 24px rgba(0,0,0,.5)';
+    });
+
+    // TOUCH: long-press = rotate mode, short tap+drag = move
+    card.addEventListener('touchstart',e=>{
+      if(e.touches.length>1)return; // let pinch handle
+      e.preventDefault();
+      const t=e.touches[0];
+      const cp=toCanvas(t.clientX,t.clientY);
+      dragOffX=cp.x-positions[sid].x;
+      dragOffY=cp.y-positions[sid].y;
+      dragging=card;dragMoved=false;
+      card.style.zIndex=100;
+
+      // Long press → enter rotate mode for this card
+      longPressTimer=setTimeout(()=>{
+        dragging=null;
+        // Show a quick visual pulse on the card
+        card.style.outline='2px solid var(--blue)';
+        // Enter touch-rotate mode
+        rotating={sid,card};
+        const cr=card.getBoundingClientRect();
+        rotating.cx=cr.left+cr.width/2;rotating.cy=cr.top+cr.height/2;
+        const t2=e.touches[0];
+        rotStartAngle=Math.atan2(t2.clientY-rotating.cy,t2.clientX-rotating.cx)*(180/Math.PI);
+        rotInitDeg=positions[sid]?.rot||0;
+      },500);
+    },{passive:false});
+  });
+
+  // ── Global mousemove: drag or pan ────────────────────
+  let panDragging=false,panStartX=0,panStartY=0,panX0=0,panY0=0;
+
+  viewport.addEventListener('mousedown',e=>{
+    if(e.target.closest('.seat-card')||e.target.closest('.seat-rot-handle'))return;
+    panDragging=true;panStartX=e.clientX;panStartY=e.clientY;panX0=panX;panY0=panY;
+    viewport.style.cursor='grabbing';
+  });
+
+  document.addEventListener('mousemove',e=>{
+    if(dragging){
+      const cp=toCanvas(e.clientX,e.clientY);
+      const nx=cp.x-dragOffX,ny=cp.y-dragOffY;
+      positions[dragging.dataset.sid].x=nx;positions[dragging.dataset.sid].y=ny;
+      dragging.style.left=nx+'px';dragging.style.top=ny+'px';
+      dragMoved=true;
+    } else if(panDragging){
+      panX=panX0+(e.clientX-panStartX);panY=panY0+(e.clientY-panStartY);
+      applyView();
+    }
+  });
+
+  document.addEventListener('mouseup',e=>{
+    if(dragging){
+      dragging.style.zIndex=1;dragging.style.cursor='grab';
+      dragging.style.boxShadow='';
+      if(dragMoved)savePos(dragging.dataset.sid);
+      dragging=null;
+    }
+    if(panDragging){panDragging=false;viewport.style.cursor='';}
+  });
+
+  // ── Mouse wheel zoom ─────────────────────────────────
+  viewport.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const delta=e.deltaY>0?-0.08:0.08;
+    // Zoom toward cursor
+    const vr=viewport.getBoundingClientRect();
+    const mx=e.clientX-vr.left,my=e.clientY-vr.top;
+    const newZoom=Math.min(2.5,Math.max(0.25,zoom+delta));
+    panX=mx-(mx-panX)*(newZoom/zoom);
+    panY=my-(my-panY)*(newZoom/zoom);
+    zoom=newZoom;applyView();
+  },{passive:false});
+
+  // ── Touch events: pinch zoom + card drag/rotate ───────
+  viewport.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){
+      e.preventDefault();
+      if(!pinching){
+        pinching=true;pinchDist0=pinchDist(e);pinchZoom0=zoom;
+        pinchMidX=(e.touches[0].clientX+e.touches[1].clientX)/2;
+        pinchMidY=(e.touches[0].clientY+e.touches[1].clientY)/2;
+        pinchPanX0=panX;pinchPanY0=panY;
+        dragging=null;clearTimeout(longPressTimer);
+      }
+      const newZoom=Math.min(2.5,Math.max(0.25,pinchZoom0*(pinchDist(e)/pinchDist0)));
+      const vr=viewport.getBoundingClientRect();
+      const mx=pinchMidX-vr.left,my=pinchMidY-vr.top;
+      panX=mx-(mx-pinchPanX0)*(newZoom/pinchZoom0);
+      panY=my-(my-pinchPanY0)*(newZoom/pinchZoom0);
+      zoom=newZoom;applyView();
+      return;
+    }
+    if(rotating&&e.touches.length===1){
+      e.preventDefault();
+      const t=e.touches[0];
+      const angle=Math.atan2(t.clientY-rotating.cy,t.clientX-rotating.cx)*(180/Math.PI);
+      let deg=rotInitDeg+(angle-rotStartAngle);
+      deg=Math.round(deg);
+      positions[rotating.sid].rot=deg;
+      rotating.card.style.transform=`rotate(${deg}deg)`;
+      return;
+    }
+    if(dragging&&e.touches.length===1){
+      e.preventDefault();
+      clearTimeout(longPressTimer);
+      const t=e.touches[0];
+      const cp=toCanvas(t.clientX,t.clientY);
+      const nx=cp.x-dragOffX,ny=cp.y-dragOffY;
+      positions[dragging.dataset.sid].x=nx;positions[dragging.dataset.sid].y=ny;
+      dragging.style.left=nx+'px';dragging.style.top=ny+'px';
+      dragMoved=true;
+    }
+  },{passive:false});
+
+  viewport.addEventListener('touchend',e=>{
+    clearTimeout(longPressTimer);
+    if(pinching){pinching=false;return;}
+    if(rotating){
+      rotating.card.style.outline='';
+      savePos(rotating.sid);rotating=null;return;
+    }
+    if(dragging){
+      dragging.style.zIndex=1;dragging.style.boxShadow='';
+      if(dragMoved)savePos(dragging.dataset.sid);
+      dragging=null;
+    }
+  });
+}
+
+function resetSeats(gid){
+  if(!confirm('Reset all positions and rotations to default grid?'))return;
+  localStorage.removeItem('tt_seatpos_'+gid);
+  S.section='seating-plan';
+  render();
+}
+
+function exportSeatPNG(gid){
+  const g=S.groups.find(x=>x.id===gid);
+  const students=groupStudents(gid);
+  const posKey='tt_seatpos_'+gid;
+  const positions=JSON.parse(localStorage.getItem(posKey)||'{}');
+  const col=g?getColor(g.color):COLORS[0];
+  const dotColor=col.dot;
+  const CARD_W=80,CARD_H=96,PAD=40,COLS=4;
+
+  // Initialize missing positions
+  students.forEach((s,i)=>{
+    if(!positions[s.id]){
+      const c2=i%COLS,row=Math.floor(i/COLS);
+      positions[s.id]={x:PAD+c2*(CARD_W+12),y:PAD+row*(CARD_H+12),rot:0};
+    }
+    if(positions[s.id].rot===undefined)positions[s.id].rot=0;
+  });
+
+  // Bounding box
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  students.forEach(s=>{
+    const p=positions[s.id];
+    const diag=Math.hypot(CARD_W,CARD_H)/2;
+    minX=Math.min(minX,p.x-diag);minY=Math.min(minY,p.y-diag);
+    maxX=Math.max(maxX,p.x+CARD_W+diag);maxY=Math.max(maxY,p.y+CARD_H+diag);
+  });
+
+  const offsetX=-minX+PAD,offsetY=-minY+PAD+24;
+  const cw=Math.max(maxX-minX+PAD*2,400),ch=Math.max(maxY-minY+PAD*2+24,300);
+  const scale=2;
+  const canvas=document.createElement('canvas');
+  canvas.width=cw*scale;canvas.height=ch*scale;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(scale,scale);
+
+  // Background + dot grid
+  ctx.fillStyle='#f9eae1';ctx.fillRect(0,0,cw,ch);
+  ctx.fillStyle='#e0c8be';
+  for(let gx=0;gx<cw;gx+=32)for(let gy=0;gy<ch;gy+=32)ctx.fillRect(gx,gy,1.5,1.5);
+
+  // Title
+  ctx.fillStyle='#5c3d3d';ctx.font='bold 13px sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.fillText(g?g.name:'Seating Plan',12,8);
+
+  // Pre-load all photos first, then draw everything synchronously
+  const photoMap={};
+  const photoStudents=students.filter(s=>s.photo);
+  let loaded=0;
+
+  function drawAll(){
+    students.forEach(s=>{
+      const p=positions[s.id];
+      const cx=p.x+offsetX+CARD_W/2,cy=p.y+offsetY+CARD_H/2;
+      const rad=(p.rot||0)*Math.PI/180;
+
+      ctx.save();
+      ctx.translate(cx,cy);ctx.rotate(rad);
+
+      // Card
+      ctx.fillStyle='#fff8f4';
+      ctx.beginPath();ctx.roundRect(-CARD_W/2,-CARD_H/2,CARD_W,CARD_H,10);ctx.fill();
+      ctx.strokeStyle='#cdb0a6';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.roundRect(-CARD_W/2,-CARD_H/2,CARD_W,CARD_H,10);ctx.stroke();
+
+      // Avatar bg + ring
+      const avy=-CARD_H/2+14+26;
+      ctx.fillStyle='#f0e0d6';
+      ctx.beginPath();ctx.arc(0,avy,26,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=dotColor;ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,avy,26,0,Math.PI*2);ctx.stroke();
+
+      // Photo or initials
+      const img=photoMap[s.id];
+      if(img){
+        ctx.save();ctx.beginPath();ctx.arc(0,avy,24,0,Math.PI*2);ctx.clip();
+        ctx.drawImage(img,-24,avy-24,48,48);ctx.restore();
+      } else {
+        ctx.fillStyle=dotColor;ctx.font='bold 15px sans-serif';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(initials(s.name),0,avy);
+      }
+
+      // Name
+      const first=s.name.split(' ')[0];
+      const last=s.name.split(' ').slice(1).join(' ');
+      ctx.fillStyle='#5c3d3d';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+      ctx.fillText(first,0,CARD_H/2-32);
+      ctx.fillStyle='#9a7070';ctx.font='8px sans-serif';
+      ctx.fillText(last,0,CARD_H/2-20);
+
+      ctx.restore();
+    });
+
+    // Trigger download
+    const link=document.createElement('a');
+    link.download=(g?g.name.replace(/\s+/g,'-'):'seating')+'-plan.png';
+    link.href=canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  if(photoStudents.length===0){
+    drawAll();
+  } else {
+    photoStudents.forEach(s=>{
+      const img=new Image();
+      img.onload=()=>{photoMap[s.id]=img;loaded++;if(loaded===photoStudents.length)drawAll();};
+      img.onerror=()=>{loaded++;if(loaded===photoStudents.length)drawAll();};
+      img.src=s.photo;
+    });
+  }
+}
+
+function renderAllStudents(){
+  const area=document.getElementById('students-list-area');if(!area)return;
+  if(!S.students.length){area.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="empty-title">No students yet</div><button class="btn btn-primary btn-sm" onclick="showSection('classes')">Go to Setup</button></div>`;return}
+  let html='<div class="section-label">All Students</div><div class="card" style="margin-bottom:16px">';
+  S.groups.forEach(g=>{const col=getColor(g.color);const gs=sortStudents(S.students.filter(s=>s.groupId===g.id),g.sortMode||'num');if(!gs.length)return;html+=`<div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:${col.dot}">${g.name}</div>`;gs.forEach(s=>{html+=`<div class="student-row" onclick="S.editStudent='${s.id}';S.section='student-detail';render()"><div style="width:24px;text-align:right;font-size:12px;font-weight:600;color:var(--text3);flex-shrink:0">${s.num||'–'}</div><div class="avatar" style="margin-left:8px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div class="student-info"><div class="student-name">${s.name}</div><div class="student-meta">${s.birthday?formatDate(s.birthday):'No birthday'}${s.iep?' · IEP':''}</div></div><div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`;});});
+  area.innerHTML=html+'</div>';
+}
+function renderStudentDetail(c){
+  const s=S.students.find(x=>x.id===S.editStudent);if(!s){showSection('students');return}
+  const g=S.groups.find(x=>x.id===s.groupId),col=g?getColor(g.color):COLORS[0];
+  const beh=S.behavior.filter(b=>b.sid===s.id),cts=S.contacts.filter(c=>c.sid===s.id);
+  const note=S.studentNotes[s.id]||'';
+  c.innerHTML=`<div class="page-header"><div style="display:flex;align-items:center;gap:10px"><button class="btn-icon" onclick="history.back()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="page-title">${s.name}</div></div><button class="btn-icon" onclick="openEditStudent('${s.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
+  <div style="padding:20px 16px;display:flex;align-items:center;gap:16px"><div class="avatar" style="width:72px;height:72px;font-size:24px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div><div style="font-size:18px;font-weight:600">${s.name}</div><div style="margin-top:4px"><span class="group-badge ${col.cls}">${g?g.name:'No group'}</span>${s.iep?` <span class="tag" style="background:var(--amber-bg);color:var(--amber)">IEP</span>`:''}</div>${s.birthday?`<div style="font-size:12px;color:var(--text3);margin-top:6px">Birthday: ${formatDate(s.birthday)}</div>`:''}${s.codes?`<div style="font-size:12px;color:var(--text3);margin-top:2px">Codes: ${s.codes}</div>`:''}</div></div>
+  <div class="tile-grid">
+    <div class="tile" onclick="comingSoon('Attendance History')"><div class="tile-icon col-blue"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="tile-label">Attendance</div><div class="tile-sub">History</div></div>
+    <div class="tile" onclick="S.behStudent='${s.id}';S.section='beh-history';render()"><div class="tile-icon col-amber"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="tile-label">Behaviour</div><div class="tile-sub">${beh.length} logs</div></div>
+    <div class="tile" onclick="S.section='records';S.recordsTab='grades';S.gradesGroup=s.groupId;render()"><div class="tile-icon col-green"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="tile-label">Grades</div><div class="tile-sub">ELA · Math · CCQ</div></div>
+    <div class="tile" onclick="S.contactStudent='${s.id}';S.section='contact-detail';render()"><div class="tile-icon col-teal"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div><div class="tile-label">Communications</div><div class="tile-sub">${cts.length} logged</div></div>
+  </div>
+  <div class="section-label">Notes</div>
+  <div style="padding:0 16px 24px">
+    <textarea id="student-note-input" class="form-input" rows="5" placeholder="Add notes about this student..." style="resize:none;line-height:1.6">${note}</textarea>
+    <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="saveStudentNote('${s.id}')">Save Note</button>
+  </div>`;
+}
+
+function saveStudentNote(sid){
+  const val=document.getElementById('student-note-input')?.value||'';
+  if(val.trim())S.studentNotes[sid]=val;else delete S.studentNotes[sid];
+  save();showToast('Note saved');
+}
+
+// ── DATA MANAGEMENT ──────────────────────────────────────
+function exportData(){
+  const keys=['tt_groups','tt_students','tt_attendance','tt_participation','tt_behavior','tt_btags','tt_todos','tt_grades','tt_gassign','tt_rubric','tt_terms','tt_checklist','tt_assignments','tt_contacts','tt_schedule','tt_schedblocks','tt_journal','tt_iepstrats','tt_schedimgs','tt_snotes','tt_subnotes'];
+  const data={version:1,exported:new Date().toISOString(),data:{}};
+  keys.forEach(k=>{const v=localStorage.getItem(k);if(v)data.data[k]=v});
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().slice(0,10);
+  a.href=url;a.download=`teacher-tracker-backup-${date}.json`;
+  a.click();URL.revokeObjectURL(url);
+  showToast('✓ Backup downloaded');
+}
+
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const parsed=JSON.parse(ev.target.result);
+      const entries=parsed.data||parsed; // support both wrapped and raw
+      if(typeof entries!=='object')throw new Error('Invalid format');
+      Object.entries(entries).forEach(([k,v])=>{
+        if(k.startsWith('tt_'))localStorage.setItem(k,v);
+      });
+      showToast('✓ Data restored — reloading...');
+      setTimeout(()=>location.reload(),1200);
+    }catch(err){
+      showToast('✗ Invalid backup file');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value=''; // reset so same file can be re-imported
+}
+
+function newSchoolYear(){
+  // Show confirmation sheet
+  S.sheet={type:'new-year'};renderSheet();
+}
+
+function doNewSchoolYear(){
+  // Keep: groups, rubric, terms, behaviorTags, iepStrategies, subNotes, schedImages, schedBlocks, schedule
+  const keep=['tt_groups','tt_rubric','tt_terms','tt_btags','tt_iepstrats','tt_subnotes','tt_schedimgs','tt_schedblocks','tt_schedule'];
+  // Clear: students and all per-student/daily data
+  const clear=['tt_students','tt_attendance','tt_participation','tt_behavior','tt_todos','tt_grades','tt_gassign','tt_checklist','tt_assignments','tt_contacts','tt_journal','tt_snotes'];
+  clear.forEach(k=>localStorage.removeItem(k));
+  showToast('✓ New year started — reloading...');
+  setTimeout(()=>location.reload(),1200);
+}
+
+// ── CLASSES/SETUP ────────────────────────────────────────
+function renderClasses(c){
+  c.innerHTML=`<div class="page-header"><div class="page-title">Setup</div><button class="btn-icon" onclick="openAddGroup()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+  ${S.groups.length===0?`<div class="empty"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="empty-title">No groups yet</div><button class="btn btn-primary btn-sm" onclick="openAddGroup()">Add Group</button></div>`:`
+  <div class="section-label">Your Groups</div><div class="card">${S.groups.map(g=>{const col=getColor(g.color);const cnt=S.students.filter(s=>s.groupId===g.id).length;return`<div class="student-row" onclick="S.editGroup='${g.id}';S.section='group-detail';render()"><div class="color-dot" style="background:${col.dot}"></div><div class="student-info"><div class="student-name">${g.name}</div><div class="student-meta">${cnt} student${cnt!==1?'s':''}</div></div><div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`;}).join('')}</div>
+  <div class="section-label" style="padding-top:20px">Settings</div>
+  <div class="card">
+    <div class="student-row" onclick="openRubricEditor()"><div class="student-info"><div class="student-name">Rubric Scale</div><div class="student-meta">Set % ranges for levels 1–5+</div></div><div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+    <div class="student-row" onclick="openTermEditor()"><div class="student-info"><div class="student-name">Term Dates</div><div class="student-meta">${S.terms.map(t=>t.start?fmtDate(t.start):'Not set').join(' · ')}</div></div><div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
+  </div>`}
+  <div class="section-label" style="padding-top:20px">Data & Backup</div>
+  <div class="card">
+    <div class="student-row" onclick="exportData()">
+      <div class="tile-icon col-teal" style="width:36px;height:36px;border-radius:var(--radius-sm);flex-shrink:0"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <div class="student-info"><div class="student-name">Export Backup</div><div class="student-meta">Download all data as a JSON file</div></div>
+      <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+    <label class="student-row" style="cursor:pointer">
+      <div class="tile-icon col-green" style="width:36px;height:36px;border-radius:var(--radius-sm);flex-shrink:0"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <div class="student-info"><div class="student-name">Import Backup</div><div class="student-meta">Restore from a previously exported file</div></div>
+      <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+    </label>
+    <div class="student-row" onclick="newSchoolYear()" style="border-bottom:none">
+      <div class="tile-icon col-amber" style="width:36px;height:36px;border-radius:var(--radius-sm);flex-shrink:0"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></div>
+      <div class="student-info"><div class="student-name">New School Year</div><div class="student-meta">Clear student data, keep setup & strategies</div></div>
+      <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+  </div>`;
+}
+function renderGroupDetail(c){
+  const g=S.groups.find(x=>x.id===S.editGroup);if(!g){showSection('classes');return}
+  const col=getColor(g.color);if(!g.sortMode)g.sortMode='num';
+  const students=sortStudents(S.students.filter(s=>s.groupId===g.id),g.sortMode);
+  c.innerHTML=`<div class="page-header"><div style="display:flex;align-items:center;gap:10px"><button class="btn-icon" onclick="showSection('classes')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div><div class="page-title">${g.name}</div><div style="font-size:12px;color:var(--text3)">${students.length} students</div></div></div><div style="display:flex;gap:8px"><button class="btn-icon" onclick="openEditGroup('${g.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="openAddStudent('${g.id}')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div></div>
+  ${students.length===0?`<div class="empty"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="empty-title">No students yet</div><button class="btn btn-primary btn-sm" onclick="openAddStudent('${g.id}')">Add Student</button></div>`:`
+  <div class="section-label" style="padding-right:16px"><span>Students</span><div style="display:flex;gap:6px"><button class="btn btn-sm ${g.sortMode==='num'?'btn-primary':'btn-secondary'}" onclick="S.groups.find(x=>x.id==='${g.id}').sortMode='num';save();render()"># Number</button><button class="btn btn-sm ${g.sortMode==='last'?'btn-primary':'btn-secondary'}" onclick="S.groups.find(x=>x.id==='${g.id}').sortMode='last';save();render()">Last Name</button></div></div>
+  <div class="card">${students.map(s=>`<div class="student-row" onclick="openEditStudent('${s.id}')"><div style="width:24px;text-align:right;font-size:12px;font-weight:600;color:var(--text3);flex-shrink:0">${s.num||'–'}</div><div class="avatar" style="margin-left:8px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div><div class="student-info"><div class="student-name">${s.name}</div><div class="student-meta">${s.birthday?formatDate(s.birthday):'No birthday'}${s.iep?' · IEP':''}</div></div><div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`).join('')}</div>`}`;
+}
+
+// ── SHEETS ───────────────────────────────────────────────
+function openAddGroup(){S.sheet={type:'add-group',name:'',color:'blue'};renderSheet()}
+function openEditGroup(id){const g=S.groups.find(x=>x.id===id);if(!g)return;S.sheet={type:'edit-group',id,name:g.name,color:g.color};renderSheet()}
+function openAddStudent(gid){S.sheet={type:'add-student',groupId:gid,name:'',num:'',birthday:'',photo:'',iep:false,codes:''};renderSheet()}
+function openEditStudent(id){const s=S.students.find(x=>x.id===id);if(!s)return;S.sheet={type:'edit-student',id,name:s.name,num:s.num||'',birthday:s.birthday||'',photo:s.photo||'',iep:s.iep||false,codes:s.codes||'',groupId:s.groupId};renderSheet()}
+function openRubricEditor(){S.sheet={type:'rubric'};renderSheet()}
+function openTermEditor(){S.sheet={type:'terms'};renderSheet()}
+function closeSheet(){S.sheet=null;document.getElementById('sheet-overlay')?.remove();if(S.section==='planning'||S.planTab==='subnotes'){const b=document.getElementById('plan-body');if(b&&S.planTab==='subnotes'){renderSubNotes(b);return}}render()}
+
+function renderSheet(){
+  document.getElementById('sheet-overlay')?.remove();
+  const sh=S.sheet;if(!sh)return;
+  const div=document.createElement('div');div.id='sheet-overlay';div.className='sheet-overlay';
+  div.onclick=e=>{if(e.target===div)closeSheet()};
+  let body='';
+  if(sh.type==='beh-modal'){
+    const s=S.students.find(x=>x.id===sh.sid),pos=S.behaviorTags.filter(t=>t.type==='pos'),neg=S.behaviorTags.filter(t=>t.type==='neg');
+    body=`<div class="sheet-handle"></div><div class="sheet-header" style="display:flex;align-items:center;gap:12px"><div class="avatar" style="width:40px;height:40px;font-size:14px">${s?.photo?`<img src="${s.photo}">`:`<span>${initials(s?.name||'?')}</span>`}</div><div>${s?.name||'Student'}</div></div><div class="sheet-body"><div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px">POSITIVE</div><div class="beh-grid">${pos.map(t=>`<div class="beh-tag beh-pos" onclick="logBehaviour('${sh.sid}','${sh.gid}','${t.id}')">${t.label}</div>`).join('')}</div><div style="font-size:12px;font-weight:600;color:var(--red);margin-top:14px;margin-bottom:8px">NEEDS ATTENTION</div><div class="beh-grid">${neg.map(t=>`<div class="beh-tag beh-neg" onclick="logBehaviour('${sh.sid}','${sh.gid}','${t.id}')">${t.label}</div>`).join('')}</div><button class="btn btn-secondary btn-sm" style="margin-top:16px;width:100%" onclick="S.behStudent='${sh.sid}';S.section='beh-history';S.sheet=null;document.getElementById('sheet-overlay')?.remove();render()">View history</button></div>`;
+  } else if(sh.type==='beh-tags'){
+    const pos=S.behaviorTags.filter(t=>t.type==='pos'),neg=S.behaviorTags.filter(t=>t.type==='neg');
+    const tr=t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:${t.type==='pos'?'var(--green)':'var(--red)'};flex-shrink:0"></div><span>${t.label}</span></div><button onclick="deleteBehTag('${t.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1;padding:0 4px">×</button></div>`;
+    body=`<div class="sheet-handle"></div><div class="sheet-header">Edit Behaviour Tags</div><div class="sheet-body"><div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px">POSITIVE</div>${pos.map(tr).join('')}<div style="font-size:12px;font-weight:600;color:var(--red);margin-top:14px;margin-bottom:6px">NEEDS ATTENTION</div>${neg.map(tr).join('')}<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"><div style="font-size:13px;font-weight:600;margin-bottom:10px">Add New Tag</div><div class="form-group"><label class="form-label">Tag Name</label><input class="form-input" placeholder="e.g. Working Independently" value="${sh.newLabel||''}" oninput="S.sheet.newLabel=this.value"></div><div class="form-group"><label class="form-label">Type</label><div style="display:flex;gap:8px"><button class="btn btn-sm ${(sh.newType||'pos')==='pos'?'btn-primary':'btn-secondary'}" onclick="S.sheet.newType='pos';renderSheet()">Positive</button><button class="btn btn-sm ${(sh.newType||'pos')==='neg'?'btn-primary':'btn-secondary'}" onclick="S.sheet.newType='neg';renderSheet()">Needs Attention</button></div></div><button class="btn btn-primary" style="width:100%" onclick="saveBehTag()">Add Tag</button></div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Done</button></div>`;
+  } else if(sh.type==='sched-block'){
+    const colorOpts=[{id:'none',dot:'#9a7070'},{id:'blue',dot:'#7d4f50'},{id:'green',dot:'#6ba292'},{id:'purple',dot:'#7a5a90'},{id:'coral',dot:'#cc8b86'},{id:'amber',dot:'#a06828'},{id:'teal',dot:'#4a8a78'}];
+    body=`<div class="sheet-handle"></div><div class="sheet-header">${sh.day} · ${sh.time}</div><div class="sheet-body">
+      <div class="form-group"><label class="form-label">Label</label><input class="form-input" value="${sh.label}" placeholder="e.g. Group 401 — Math" oninput="S.sheet.label=this.value"></div>
+      <div class="form-group"><label class="form-label">Room (optional)</label><input class="form-input" value="${sh.room}" placeholder="e.g. Room 12" oninput="S.sheet.room=this.value"></div>
+      <div class="form-group"><label class="form-label">Note (optional)</label><input class="form-input" value="${sh.note}" placeholder="e.g. Supervision duty" oninput="S.sheet.note=this.value"></div>
+      <div class="form-group"><label class="form-label">Colour</label><div style="display:flex;gap:8px">${colorOpts.map(c=>`<div style="width:28px;height:28px;border-radius:50%;background:${c.dot};cursor:pointer;border:2px solid ${sh.color===c.id?'#fff':'transparent'}" onclick="S.sheet.color='${c.id}';renderSheet()"></div>`).join('')}</div></div>
+      ${sh.label||sh.room||sh.note?`<button class="btn btn-danger btn-sm" onclick="S.sheet.label='';S.sheet.room='';S.sheet.note='';saveSchedBlock()">Clear Block</button>`:''}
+    </div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveSchedBlock()">Save</button></div>`;
+  } else if(sh.type==='edit-blocks'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">Edit Time Blocks</div><div class="sheet-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Set the start time for each block</div>
+      ${sh.blocks.map((b,i)=>`<div class="form-group" style="display:flex;align-items:center;gap:10px"><label class="form-label" style="width:60px;margin-bottom:0">Block ${i+1}</label><input class="form-input" value="${b}" placeholder="e.g. 8:00" oninput="S.sheet.blocks[${i}]=this.value" style="flex:1"><button onclick="S.sheet.blocks.splice(${i},1);renderSheet()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:0 4px">×</button></div>`).join('')}
+    </div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveBlocks()">Save</button></div>`;
+  } else if(sh.type==='new-assign'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">New Assignment</div><div class="sheet-body"><div class="form-group"><label class="form-label">Name</label><input class="form-input" placeholder="e.g. Quiz 3" oninput="S.sheet.name=this.value" value="${sh.name}"></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" value="${sh.date}" onchange="S.sheet.date=this.value"></div><div class="form-group"><label class="form-label">Points Possible</label><input class="form-input" type="number" min="1" placeholder="e.g. 20" oninput="S.sheet.possible=this.value" value="${sh.possible}" style="width:140px"></div><div style="font-size:12px;color:var(--text3)">After saving you'll enter scores for all students at once.</div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveNewAssign()">Save & Enter Grades</button></div>`;
+  } else if(sh.type==='add-assignment'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">New Assignment</div><div class="sheet-body"><div class="form-group"><label class="form-label">Title</label><input class="form-input" placeholder="e.g. Chapter 4 worksheet" oninput="S.sheet.title=this.value"></div><div class="form-group"><label class="form-label">Due Date (optional)</label><input class="form-input" type="date" onchange="S.sheet.due=this.value"></div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveAssignment()">Add</button></div>`;
+  } else if(sh.type==='add-contact'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">Log Communication</div><div class="sheet-body"><div class="form-group"><label class="form-label">Method</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${[{id:'call',label:'📞 Call'},{id:'email',label:'✉️ Email'},{id:'inperson',label:'🤝 In Person'},{id:'note',label:'📝 Note Home'}].map(m=>`<button class="btn btn-sm ${sh.method===m.id?'btn-primary':'btn-secondary'}" onclick="S.sheet.method='${m.id}';renderSheet()">${m.label}</button>`).join('')}</div></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" value="${sh.date}" onchange="S.sheet.date=this.value"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" rows="3" oninput="S.sheet.notes=this.value" style="resize:none">${sh.notes}</textarea></div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveContact()">Save</button></div>`;
+  } else if(sh.type==='add-todo'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">New Task</div><div class="sheet-body"><div class="form-group"><label class="form-label">Task</label><input class="form-input" placeholder="What needs doing?" oninput="S.sheet.title=this.value"></div><div class="form-group"><label class="form-label">Due Date (optional)</label><input class="form-input" type="date" onchange="S.sheet.due=this.value"></div><div class="form-group"><label class="form-label">Group (optional)</label><select class="form-input" onchange="S.sheet.groupId=this.value"><option value="">General</option>${S.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}</select></div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveAddTodo()">Add Task</button></div>`;
+  } else if(sh.type==='iep-strategies'){
+    const student=S.students.find(x=>x.id===sh.sid);
+    const sel=sh.selected||[];
+    body=`<div class="sheet-handle"></div>
+    <div class="sheet-header" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Strategies — ${student?.name||''}</span>
+      <span style="font-size:12px;color:var(--text3);font-weight:400">${sel.length} selected</span>
+    </div>
+    <div class="sheet-body" style="padding:0" id="strat-scroll-body">
+      ${IEP_STRATEGIES.map((sec,si)=>`
+        <div style="padding:10px 20px 6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--amber);background:var(--amber-bg);border-bottom:1px solid var(--border)">${sec.section}</div>
+        ${sec.items.map((item,ii)=>{
+          const checked=sel.includes(item);
+          return`<div onclick="toggleIEPStrat(${si},${ii})" style="display:flex;align-items:flex-start;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);cursor:pointer;background:${checked?'var(--blue-bg)':'transparent'}">
+            <div style="width:20px;height:20px;border-radius:4px;border:2px solid ${checked?'var(--blue)':'var(--border2)'};background:${checked?'var(--blue)':'var(--bg3)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+              ${checked?`<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>`:''}
+            </div>
+            <div style="font-size:13px;line-height:1.5;color:${checked?'var(--text)':'var(--text2)'}">${item}</div>
+          </div>`;
+        }).join('')}
+      `).join('')}
+    </div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveIEPStrategies()">Save Strategies</button></div>`;
+  } else if(sh.type==='sub-prompt'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">${sh.mode==='add'?'New Field':'Edit Field'}</div><div class="sheet-body"><div class="form-group"><label class="form-label">Question / Prompt</label><input class="form-input" value="${sh.q}" placeholder="e.g. Lunch routine" oninput="S.sheet.q=this.value"></div></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="saveSubPrompt()">Save</button></div>`;
+  } else if(sh.type==='new-year'){
+    body=`<div class="sheet-handle"></div>
+    <div class="sheet-header">New School Year</div>
+    <div class="sheet-body">
+      <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px">This will permanently delete:</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">
+        ${['All students','Attendance records','Participation records','Behaviour logs','Grades & assignments','Checklist data','Communications','To-do items','Student notes'].map(i=>`<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--red)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>${i}</div>`).join('')}
+      </div>
+      <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:8px">This will keep:</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:24px">
+        ${['Groups (empty)','Rubric scale','Term dates','Behaviour tags','IEP strategies','Sub notes','Schedule & images'].map(i=>`<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--green)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>${i}</div>`).join('')}
+      </div>
+      <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--red);line-height:1.5">
+        <strong>Export a backup first.</strong> This cannot be undone.
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeSheet()">Cancel</button>
+      <button class="btn btn-danger" onclick="closeSheet();doNewSchoolYear()">Start New Year</button>
+    </div>`;
+  } else if(sh.type==='rubric'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">Rubric Scale</div><div class="sheet-body"><div style="font-size:13px;color:var(--text3);margin-bottom:14px">Set the minimum % for each level.</div>${[2,3,4,5,6].map(l=>`<div class="form-group" style="display:flex;align-items:center;gap:12px"><label class="form-label" style="width:80px;margin-bottom:0">${l===6?'Level 5+':'Level '+l}</label><input class="form-input" type="number" min="0" max="100" value="${S.rubric[l]}" oninput="S.rubric[${l}]=parseInt(this.value)||0;save()" style="width:100px"><span style="font-size:13px;color:var(--text3)">%</span></div>`).join('')}</div><div class="btn-row"><button class="btn btn-primary" onclick="closeSheet()">Done</button></div>`;
+  } else if(sh.type==='terms'){
+    body=`<div class="sheet-handle"></div><div class="sheet-header">Term Dates</div><div class="sheet-body">${S.terms.map(t=>`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)"><div style="font-size:14px;font-weight:600;margin-bottom:8px">${t.label}</div><div style="display:flex;gap:10px"><div style="flex:1"><label class="form-label">Start</label><input class="form-input" type="date" value="${t.start}" onchange="S.terms.find(x=>x.id==='${t.id}').start=this.value;save()"></div><div style="flex:1"><label class="form-label">End</label><input class="form-input" type="date" value="${t.end}" onchange="S.terms.find(x=>x.id==='${t.id}').end=this.value;save()"></div></div></div>`).join('')}</div><div class="btn-row"><button class="btn btn-primary" onclick="closeSheet()">Done</button></div>`;
+  } else if(sh.type==='add-group'||sh.type==='edit-group'){
+    const isE=sh.type==='edit-group';
+    body=`<div class="sheet-handle"></div><div class="sheet-header">${isE?'Edit Group':'New Group'}</div><div class="sheet-body"><div class="form-group"><label class="form-label">Group Name</label><input class="form-input" value="${sh.name}" placeholder="e.g. Group 401" oninput="S.sheet.name=this.value"></div><div class="form-group"><label class="form-label">Color</label><div class="color-options">${COLORS.map(col=>`<div class="color-opt${sh.color===col.id?' selected':''}" style="background:${col.dot}" onclick="S.sheet.color='${col.id}';renderSheet()"></div>`).join('')}</div></div>${isE?`<button class="btn btn-danger btn-sm" onclick="deleteGroup('${sh.id}')">Delete Group</button>`:''}</div><div class="btn-row"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button><button class="btn btn-primary" onclick="${isE?`saveEditGroup('${sh.id}')`:'saveAddGroup()'}">Save</button></div>`;
+  } else if(sh.type==='add-student'||sh.type==='edit-student'){
+    const isE=sh.type==='edit-student';
+    body=`<div class="sheet-handle"></div><div class="sheet-header">${isE?'Edit Student':'Add Student'}</div><div class="sheet-body"><div style="display:flex;align-items:center;gap:16px;margin-bottom:20px"><div class="photo-upload" onclick="triggerPhotoUpload()" id="photo-preview">${sh.photo?`<img src="${sh.photo}">`:`<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>`}</div><div style="font-size:12px;color:var(--text3)">Tap to add<br>photo</div><input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"></div><div class="form-group"><label class="form-label">Class Number</label><input class="form-input" value="${sh.num}" placeholder="Auto-assigned if blank" oninput="S.sheet.num=this.value" type="number" min="1" style="width:140px"></div><div class="form-group"><label class="form-label">Full Name</label><input class="form-input" value="${sh.name}" placeholder="Student name" oninput="S.sheet.name=this.value"></div><div class="form-group"><label class="form-label">Birthday</label><input class="form-input" type="date" value="${sh.birthday}" min="2005-01-01" max="2020-12-31" onchange="S.sheet.birthday=this.value"></div><div class="form-group"><label class="form-label">Formal System Codes (optional)</label><input class="form-input" value="${sh.codes}" placeholder="e.g. 301, ESL" oninput="S.sheet.codes=this.value"></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><input type="checkbox" id="sh-iep" ${sh.iep?'checked':''} onchange="S.sheet.iep=this.checked" style="width:18px;height:18px;accent-color:var(--amber)"><label for="sh-iep" style="font-size:14px;cursor:pointer">Has an IEP</label></div>${isE?`<button class="btn btn-danger btn-sm" onclick="deleteStudent('${sh.id}')">Remove Student</button>`:''}</div><div class="btn-row" style="flex-wrap:wrap;gap:8px"><button class="btn btn-secondary" onclick="closeSheet()">Cancel</button>${isE?`<button class="btn btn-primary" onclick="saveEditStudent('${sh.id}')">Save</button>`:`<button class="btn btn-secondary" onclick="saveAddStudent(false)">Save</button><button class="btn btn-primary" onclick="saveAddStudent(true)">Save & Add New</button>`}</div>`;
+  }
+  div.innerHTML=`<div class="sheet">${body}</div>`;
+  document.body.appendChild(div);
+}
+
+function openAddTodo(){S.sheet={type:'add-todo',title:'',due:'',groupId:''};renderSheet()}
+function logBehaviour(sid,gid,tid){const tag=S.behaviorTags.find(t=>t.id===tid);if(!tag)return;S.behavior.push({id:'b'+Date.now(),sid,gid,tid,label:tag.label,type:tag.type,date:todayStr(),ts:Date.now()});save();closeSheet()}
+function openBehTagEditor(){S.sheet={type:'beh-tags',newLabel:'',newType:'pos'};renderSheet()}
+function saveBehTag(){const sh=S.sheet;if(!sh.newLabel.trim()){alert('Please enter a tag name');return}S.behaviorTags.push({id:'bt'+Date.now(),label:sh.newLabel.trim(),type:sh.newType});save();S.sheet={type:'beh-tags',newLabel:'',newType:'pos'};renderSheet()}
+function deleteBehTag(id){if(!confirm('Delete this tag?'))return;S.behaviorTags=S.behaviorTags.filter(t=>t.id!==id);save();S.sheet={type:'beh-tags',newLabel:'',newType:'pos'};renderSheet()}
+function triggerPhotoUpload(){document.getElementById('photo-input')?.click()}
+function handlePhotoUpload(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const MAX=200;let w=img.width,h=img.height;if(w>h){if(w>MAX){h=h*(MAX/w);w=MAX}}else{if(h>MAX){w=w*(MAX/h);h=MAX}}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);S.sheet.photo=canvas.toDataURL('image/jpeg',0.75);renderSheet()};img.src=ev.target.result};reader.readAsDataURL(file)}
+function saveAddGroup(){const sh=S.sheet;if(!sh.name.trim()){alert('Please enter a group name');return}S.groups.push({id:'g'+Date.now(),name:sh.name.trim(),color:sh.color});save();closeSheet()}
+function saveEditGroup(id){const sh=S.sheet;if(!sh.name.trim()){alert('Enter a name');return}const g=S.groups.find(x=>x.id===id);if(g){g.name=sh.name.trim();g.color=sh.color}save();closeSheet()}
+function deleteGroup(id){if(!confirm('Delete this group? Students will also be removed.'))return;S.groups=S.groups.filter(g=>g.id!==id);S.students=S.students.filter(s=>s.groupId!==id);save();S.section='classes';closeSheet()}
+function saveAddStudent(addAnother){const sh=S.sheet;if(!sh.name.trim()){alert('Enter a name');return}const num=sh.num.trim()||String(nextStudentNum(sh.groupId));S.students.push({id:'s'+Date.now(),groupId:sh.groupId,name:sh.name.trim(),num,birthday:sh.birthday,photo:sh.photo,iep:sh.iep,codes:sh.codes});save();if(addAnother){openAddStudent(sh.groupId)}else{closeSheet()}}
+function saveEditStudent(id){const sh=S.sheet;if(!sh.name.trim()){alert('Enter a name');return}const s=S.students.find(x=>x.id===id);if(s){s.name=sh.name.trim();s.num=sh.num.trim();s.birthday=sh.birthday;s.photo=sh.photo;s.iep=sh.iep;s.codes=sh.codes}save();closeSheet()}
+function deleteStudent(id){if(!confirm('Remove this student?'))return;S.students=S.students.filter(s=>s.id!==id);save();S.section='group-detail';closeSheet()}
+function saveAddTodo(){const sh=S.sheet;if(!sh.title.trim()){alert('Enter a task title');return}S.todos.push({id:'td'+Date.now(),title:sh.title.trim(),due:sh.due,groupId:sh.groupId,done:false});save();closeSheet()}
+function comingSoon(name){document.getElementById('sheet-overlay')?.remove();const div=document.createElement('div');div.id='sheet-overlay';div.className='sheet-overlay';div.onclick=e=>{if(e.target===div)div.remove()};div.innerHTML=`<div class="sheet"><div class="sheet-handle"></div><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:16px;text-align:center"><div style="font-size:18px;font-weight:600">${name}</div><div style="font-size:13px;color:var(--text3);max-width:240px">Coming soon.</div><button class="btn btn-primary btn-sm" onclick="document.getElementById('sheet-overlay')?.remove()">Got it</button></div></div>`;document.body.appendChild(div)}
+
+// ── IEP STRATEGY MASTER LIST ────────────────────────────
+const IEP_STRATEGIES=[
+  {section:'Academic',items:['Reduce quantity of assigned work','Reduce copying requirements','Extra time to complete tasks','Break assignments into shorter tasks','Seat student closer to teacher','Seat student in an area free of distractions','Read with a student reading buddy','Read with an adult volunteer','Use of MSN (Match-Select-Name) to reinforce new vocabulary','Use of peer or adult scribe','Use of peer or adult reader','Use of Home Reader/Book Bag when work is done','Allow for unconventional spelling','Simplify written instructions','Reduce note taking by providing notes to student','Use of individual keyboard','Use of calculator in tests','Use of calculator for all Math computation','Use of calculator for checking answers','Use of graph paper','Allow time to process information','Provide a model/sample for student to follow','Use rubrics to clarify expectations','Use of specialized software / apps','Use of Kurzweil software','Use of Rosetta Stone software','Use of WordQ / SpeakQ software','Use of Google Read&Write software','Use of Proloquo2go app','Use a multiplication chart','Use of Math memory aid','Preview vocabulary provided by teacher','During reading highlight most important content','Express knowledge in alternative ways','Learn new information in alternative ways','Allow for translation','Communicate needs by whispering to the teacher','Use gestures to communicate','Provide individual instruction following group instruction','Regular check-ins to solidify understanding','Provide step-by-step instructions','Allow use of personal electronic dictionary','Small group practice with peers','Allow for use of English in history/science/geography/technology','Use of Chromebook for writing','Active listening visual aid on desk','Identify/highlight writing spaces','Individual prompting to refocus on tasks','Support in organizing the initiation of a task','Small group instruction following whole class instruction','Restate word problems/instructions using clear, concise language and familiar vocabulary to facilitate understanding','Use of IPad to record reading samples and opinions/ideas']},
+  {section:'Social/Behavioural',items:['Use a goal chart for positive reinforcement','Recognize appropriate behaviour','Help to establish rules and personal goals','Use home/school communication book','Respond to non-verbal cues to reinforce appropriate behaviour','Recognize the need for, and use self-calming strategies','Role play appropriate behaviour','Use social stories','Use conflict resolution strategies','Understand expectations and consequences','Self-monitor goals daily','Engage in structured activities at recess and lunchtime','Accept the support of a peer for agenda writing and homework organization','Use a second desk, or alternative seating','Use a standing station for completing work','Use a private and voluntary "cool down" space','Recognize 2-minute warning, and prepare for transition','Mentor other students','Work with a lunch/recess buddy','Use choices available in the environment (ex. materials, places to complete tasks)','Share successes with school personnel','Use a visual schedule','Use power cards','Use a transition symbol or object','Use a regular routine for filing and organizing papers','Use early entry','Use late entry','Use early dismissal','Use a break card','Use a First/Then card','Use a partition or booth to eliminate distractions','Practice and rehearse social skills','Use a visual timer','Record all long-term assignments on a calendar or monthly time-poster','Keep a spare set of "school tools" available in class','Staple school notices/permission forms to agenda on daily basis','Use consistent routine for handing in assignments/homework','Use additional time for organizing/packing homework materials','Use t.v. programs or video for discussing social issues','Use a checklist to verify items to take home or to bring to school','Use bungee cord attached to legs of desk as physical outlet','Have agenda checked daily by adult or peer','Post a visual cue of desired behaviour(s) on desk','Use a behaviour contract','Use graph to track progress in behaviour','Empty school bag independently','Date stamp all in-class work and homework','Label emotions by using an "Alert-O-Meter"','Identify levels of anxiety and possible strategies','Engage in leadership opportunities','Use built-in "break" times in schedule','Keep desk surface clear','Schedule a time for organization every day','Use social story, pre-visit, practice, etc. to prepare for new situation','Recognize 5-min warning, and prepare for transition','Small-group check-ins to support social-emotional learning','Individual check-ins to support social-emotional learning','Use doodle/sketch pad as calming strategy','Use of pictos to communicate needs to an adult']},
+  {section:'Test-taking and Exams',items:['Provide extra time to complete tasks and exams','Highlight important words for math','Work on math problems that have been simplified','Use quiet space to complete exams','Use support to find useful information in math problems','Relate math problem to real life situation','Use step-by-step directions to work through math situations','Practice test-taking techniques e.g. practice with multiple choice format','Use a calculator to verify work during exams','Use a reader when working on situational math problems','Use scripts for audiovisual material presented in exams','Break exams into smaller "chunks"','Review audiovisual material as many times as needed','Pause during viewing of AV material, and take notes','Use a reader for grade-level texts','Use a scribe for grade-level texts','Use word processor (without using correction tools such as spell and grammar check)','Use word processor (using correction tools such as spell and grammar check)','Read material through colored acetate or photocopy exam on colored paper','Use a personal memory aide','Focus written tests on content not on spelling','Follow a reduced number of tasks when assessing knowledge or skill','Use an alternative to a written test to assess knowledge','Allow the use of loop earbuds to help minimize noise and distractions during exams','Allow the use of loop earbuds or noise cancelling headphones to help minimize noise and distractions during exams']},
+  {section:'Visual',items:['Use a desktop mini word wall','Use a desktop number line strip','Use a desktop alphabet strip','Preview material (provided by teacher)','Frame/highlight key information in text','Use a sentence model for copying','Use personal spelling dictionary','Use of mini-flashlight for reading along in text','Use of colored acetate strips to focus on printed material','Use of file folder mask to limit amount of visual stimuli on worksheet','Use step by step instructions in writing','Use of visual cues / pictograms','Use of sticky notes to highlight written information','Use of graphic organizers','Use simple, consistent color coding system for materials (duo-tangs, worksheets, stickers, etc.)','Use of text frames as writing models','Use of highlighter when reading text','Use of scripts for instructional audio/visual material','Use a personal visual schedule','Use colored paper for photocopied material','Read material through colored acetate','Highlight margins of page to help organize written work','Use editing sheet for reference','Use symbolic summaries (simple drawings to capture ideas)','Use of white board or Smart Board','Use close captioning for audio/visual material','Use increased font size','Use of a core board for communication']},
+  {section:'Auditory',items:['Preview material orally (teacher)','Oral rehearsal prior to assignment','Repeat or confirm directions / instructions','Phone home to record homework on answering machine','Verbal triple rehearse (improve retention by repeating aloud)','Use of headphones when doing independent work','Break down instructions to manageable chunks','Read books on CD/ipod','Use mnemonics to improve recall of information','Access prior knowledge at beginning of a lesson or discussion','Listen to instrumental music at low volume during work periods','Record homework on a device','Record instructions on a device']},
+  {section:'Tactile/Kinesthetic',items:['Use movement opportunities to improve ability to focus','Relocate contents of desk to encourage movement','Use individual work files or baskets with tactile activities','Use manipulatives','Review content through hands-on games (ex. fortune tellers, board games, cards, etc.)','Use paper clip to move along edge of page for focus and following','Use sticky notes to capture key ideas on texts','Build symbolic representation of content with Lego or other materials','Use sticky labels for spelling','Use a keyboard','Volunteer for classroom job requiring movement (distribution of materials, sharpening pencils, returning library books...)','Use an alternative to seat work (use of a standing work station, etc.)','Use magnets & magnetic surface (cookie sheet, filing cabinet, etc)','Use seat cushion/hula hoop/masking tape to define space during circle time','Use inflatable seat cushion to help increase seat time','Use pipe cleaners, Wikki Stix or play dough to form shapes, letters, numbers, etc.','Use a variety of sizes and textures for writing materials','Use props related to content for student to hold','Use velcro boards (velcro on carpet squares)','Use sticky labels with information pre-printed on labels (peel-off)','Use tactile tools (manipulatives, models, computer, IPad)','Use kinesthetic tools (brain breaks, movement breaks)','The use of flexible seating']},
+  {section:'Social Skills',items:['Wait until the person has answered your question before ending the conversation','Stand or sit at least an arms length away from a person so as not to invade their space','Make eye contact, keep hands and feet still, and have a quiet mouth to be a good listener','Walk up to the person, wait for a pause in conversation and say "Excuse me..." when interrupting is necessary','Say, "Hi" the first time you see someone','Say, "See you later" when someone is leaving, or at the end of the day','Wait for a pause in the conversation before asking a question about what the other person is saying','Ask follow-up questions using WHO, WHAT, WERE, WHY and HOW to maintain a conversation','Say, "My name is ____. What\'s your name?" when introducing yourself to someone you don\'t know','Notice signs that indicate if the other person is interested in or bored with your topic during a conversation','Walk up to a friend, wait for them to look at you, then ask "Do you want to play?"','Do some of what your friend wants to do and then some of what you want to do when compromising','Think to yourself, "If I wait, then I will get a turn," when playing a game','Ask how to play the game, decide who will go first, and take turns when playing a game','Think to yourself, "It\'s only a game. There will be other games," when losing during a game','Say, "Good game," after winning or losing a game','Stop and count to ten in order to calm yourself','Take 3 deep breaths in order to calm yourself','Do something fun to feel better in order to calm yourself','Tell someone how you feel in order to calm yourself','Look for signs (facial expression, body language) that other people are sad, angry or need help to show understanding for others\' feelings','Ask, "Are you okay? Can I help?" if you notice someone is in trouble','Accept "No" by saying "Okay"','When there is something new, talk about it, calm yourself, watch others, ask for an explanation, try it','Tell the person teasing you, "Stop" in a strong voice, ignore, walk away, then tell an adult','Try, ask for help, ask for a short break, try again when work is hard']}
+];
+
+// ── IEP TRACKER ─────────────────────────────────────────
+function renderIEPList(c){
+  const iepStudents=S.students.filter(s=>s.iep);
+  c.innerHTML=`<div class="page-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-icon" onclick="S.section='students';render()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="page-title">IEP Tracker</div>
+    </div>
+  </div>
+  ${iepStudents.length===0
+    ?`<div class="empty"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg><div class="empty-title">No IEP students</div><div class="empty-sub">Mark students as having an IEP in their profile under Setup.</div></div>`
+    :`<div class="card" style="margin-top:12px">${iepStudents.map(s=>{
+        const g=S.groups.find(x=>x.id===s.groupId);
+        const col=g?getColor(g.color):COLORS[0];
+        const stratCount=(S.iepStrategies[s.id]||[]).length;
+        return`<div class="student-row" onclick="S.iepStudent='${s.id}';S.section='iep-detail';render()">
+          <div class="avatar" style="width:44px;height:44px;font-size:15px">${s.photo?`<img src="${s.photo}">`:`<span>${initials(s.name)}</span>`}</div>
+          <div class="student-info">
+            <div class="student-name" style="display:flex;align-items:center;gap:8px">${s.name}${s.codes?`<span style="font-size:11px;color:var(--text3)">${s.codes}</span>`:''}${s.iep?`<span class="tag" style="background:var(--amber-bg);color:var(--amber)">IEP</span>`:''}</div>
+            <div class="student-meta">${g?`<span class="group-badge ${col.cls}">${g.name}</span> · `:''} ${stratCount} strateg${stratCount!==1?'ies':'y'}</div>
+          </div>
+          <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>`;
+      }).join('')}</div>`}`;
+}
+
+function renderIEPDetail(c){
+  const s=S.students.find(x=>x.id===S.iepStudent);
+  if(!s){S.section='iep-list';render();return}
+  const g=S.groups.find(x=>x.id===s.groupId);
+  const col=g?getColor(g.color):COLORS[0];
+  const selected=S.iepStrategies[s.id]||[];
+
+  // Group selected strategies by section for display
+  const bySection=IEP_STRATEGIES.map(sec=>({
+    section:sec.section,
+    items:sec.items.filter(item=>selected.includes(item))
+  })).filter(sec=>sec.items.length>0);
+
+  c.innerHTML=`<div class="page-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-icon" onclick="S.section='iep-list';render()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="page-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          ${s.name}${s.codes?`<span style="font-size:12px;font-weight:400;color:var(--text3)">${s.codes}</span>`:''}
+          <span class="tag" style="background:var(--amber-bg);color:var(--amber);font-size:11px">IEP</span>
+        </div>
+        ${g?`<div style="font-size:12px;color:var(--text3);margin-top:2px"><span class="group-badge ${col.cls}">${g.name}</span></div>`:''}
+      </div>
+    </div>
+    <button class="btn btn-sm btn-secondary" onclick="exportIEPPDF('${s.id}')">Copy to Clipboard</button>
+  </div>
+
+  <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div class="section-label" style="padding:0">Strategies</div>
+    <button class="btn btn-sm btn-${selected.length?'secondary':'primary'}" onclick="openStrategySheet('${s.id}')">${selected.length?'Edit Strategies':'+ Add Strategies'}</button>
+  </div>
+
+  ${selected.length===0
+    ?`<div style="padding:24px 16px;text-align:center;font-size:13px;color:var(--text3)">No strategies selected yet. Tap "+ Add Strategies" to get started.</div>`
+    :`<div class="card" style="margin-bottom:16px" id="iep-strat-list">
+        ${bySection.map(sec=>`
+          <div style="padding:10px 16px 4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">${sec.section}</div>
+          ${sec.items.map(item=>`<div style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.4">${item}</div>`).join('')}
+        `).join('')}
+      </div>`}
+
+  <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div class="section-label" style="padding:0">Goals</div>
+    <span style="font-size:12px;color:var(--text3)">Coming next year</span>
+  </div>`;
+}
+
+function openStrategySheet(sid){
+  const selected=[...(S.iepStrategies[sid]||[])];
+  S.sheet={type:'iep-strategies',sid,selected};
+  renderSheet();
+}
+
+function saveIEPStrategies(){
+  const sh=S.sheet;
+  S.iepStrategies[sh.sid]=sh.selected;
+  save();
+  closeSheet();
+  render();
+}
+
+function toggleIEPStrat(si,ii){
+  const item=IEP_STRATEGIES[si].items[ii];
+  const sel=S.sheet.selected;
+  const idx=sel.indexOf(item);
+  if(idx>-1)sel.splice(idx,1);else sel.push(item);
+  // Patch DOM without re-rendering (preserves scroll)
+  const checked=sel.includes(item);
+  const rows=document.querySelectorAll('#strat-scroll-body [onclick]');
+  // Find matching row by si/ii via onclick attr
+  const row=Array.from(rows).find(r=>r.getAttribute('onclick')===`toggleIEPStrat(${si},${ii})`);
+  if(row){
+    row.style.background=checked?'var(--blue-bg)':'transparent';
+    const box=row.querySelector('div');
+    box.style.border=`2px solid ${checked?'var(--blue)':'var(--border2)'}`;
+    box.style.background=checked?'var(--blue)':'var(--bg3)';
+    box.innerHTML=checked?`<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>`:'';
+    const label=row.querySelectorAll('div')[1];
+    if(label)label.style.color=checked?'var(--text)':'var(--text2)';
+  }
+  // Update count in header
+  const hdr=document.querySelector('.sheet-header span:last-child');
+  if(hdr)hdr.textContent=sel.length+' selected';
+}
+
+function showToast(msg){
+  let t=document.getElementById('_toast');
+  if(!t){t=document.createElement('div');t.id='_toast';t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#7d4f50;color:#f9eae1;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;transition:opacity .3s';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.opacity='0',2500);
+}
+
+function exportIEPPDF(sid){
+  const s=S.students.find(x=>x.id===sid);
+  if(!s)return;
+  const g=S.groups.find(x=>x.id===s.groupId);
+  const selected=S.iepStrategies[sid]||[];
+  const bySection=IEP_STRATEGIES.map(sec=>({
+    section:sec.section,
+    items:sec.items.filter(item=>selected.includes(item))
+  })).filter(sec=>sec.items.length>0);
+  if(!bySection.length){showToast('No strategies selected.');return}
+
+  const plain=`${s.name}${s.codes?' ('+s.codes+')':''}\nIEP Strategies${g?' · '+g.name:''}\n\n`
+    +bySection.map(sec=>sec.section.toUpperCase()+'\n'+sec.items.map(i=>'• '+i).join('\n')).join('\n\n');
+
+  navigator.clipboard.writeText(plain).then(()=>showToast('✓ Copied to clipboard!')).catch(()=>{
+    // Final fallback: textarea select
+    const ta=document.createElement('textarea');
+    ta.value=plain;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    document.execCommand('copy');ta.remove();showToast('✓ Copied to clipboard!');
+  });
+}
+render();
+</script>
+</body>
+</html>
