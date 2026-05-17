@@ -21,7 +21,7 @@
 }
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden}
 #app{display:flex;flex-direction:column;min-height:100vh;max-width:600px;margin:0 auto}
-#content{flex:1;overflow-y:auto;padding:0 0 calc(var(--nav-h)+8px)}
+#content{flex:1;overflow-y:auto;padding:0 0 calc(var(--nav-h)+24px)}
 #nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding:0 4px}
 .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:var(--radius-sm);border:none;background:none;color:var(--text3);cursor:pointer;transition:all .15s;flex:1;min-width:0}
 .nav-btn.active{color:var(--blue)}
@@ -126,9 +126,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .grade-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
 .grade-table tr:last-child td{border-bottom:none}
 .level-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block}
-.level-1{background:#fce8e8;color:#b84040}.level-2{background:#faeedd;color:#a06828}
-.level-3{background:#ddf0eb;color:#4a8a78}.level-4{background:#ddf0eb;color:#2d6e5a}
-.level-5{background:#f3e0e0;color:#7d4f50}.level-5p{background:#ede0f3;color:#7a5a90}
+.level-1{background:#fce8e8;color:#b84040}
+.level-2{background:#faeedd;color:#a06828}.level-2p{background:#f5e8cc;color:#8a5a1a}
+.level-3m{background:#eef5e8;color:#5a7a40}.level-3{background:#ddf0eb;color:#4a8a78}.level-3p{background:#d0eee6;color:#3a7a68}
+.level-4m{background:#e8f0f8;color:#4a6a90}.level-4{background:#e0e8f8;color:#3a5a80}.level-4p{background:#d8e0f8;color:#2a4a70}
+.level-5m{background:#f0e8f8;color:#6a5a90}.level-5{background:#f3e0e0;color:#7d4f50}.level-5p{background:#ede0f3;color:#7a5a90}
 .check-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)}
 .check-row:last-child{border-bottom:none}
 .sub-toggle{width:28px;height:28px;border-radius:6px;border:2px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
@@ -170,7 +172,7 @@ const S={
   todos:JSON.parse(localStorage.getItem('tt_todos')||'[]'),
   grades:JSON.parse(localStorage.getItem('tt_grades')||'{}'),
   gassign:JSON.parse(localStorage.getItem('tt_gassign')||'[]'),
-  rubric:JSON.parse(localStorage.getItem('tt_rubric')||'null')||{1:0,2:55,3:70,4:80,5:90,6:100},
+  rubric:JSON.parse(localStorage.getItem('tt_rubric')||'null')||{'1':0,'2':50,'2+':55,'3-':60,'3':65,'3+':70,'4-':75,'4':80,'4+':85,'5-':90,'5':95,'5+':100},
   terms:JSON.parse(localStorage.getItem('tt_terms')||'null')||[{id:'t1',label:'Term 1',start:'',end:''},{id:'t2',label:'Term 2',start:'',end:''},{id:'t3',label:'Term 3',start:'',end:''}],
   checklist:JSON.parse(localStorage.getItem('tt_checklist')||'{}'),
   assignments:JSON.parse(localStorage.getItem('tt_assignments')||'[]'),
@@ -212,8 +214,16 @@ function sortStudents(arr,mode){if(mode==='last')return[...arr].sort((a,b)=>a.na
 function groupStudents(gid){const g=S.groups.find(x=>x.id===gid);return sortStudents(S.students.filter(s=>s.groupId===gid),g?.sortMode||'num')}
 function nextStudentNum(gid){const nums=S.students.filter(s=>s.groupId===gid&&s.num).map(s=>parseInt(s.num)||0);return nums.length?Math.max(...nums)+1:1}
 function formatDate(d){if(!d)return'';const[y,m,day]=d.split('-').map(Number);return`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${day}, ${y}`}
-function pctToLevel(p){const r=S.rubric;if(p>=r[6])return'5+';if(p>=r[5])return'5';if(p>=r[4])return'4';if(p>=r[3])return'3';if(p>=r[2])return'2';return'1'}
-function levelBadge(l){return`<span class="level-badge level-${l==='5+'?'5p':l}">${l}</span>`}
+const LEVELS=['5+','5','5-','4+','4','4-','3+','3','3-','2+','2','1'];
+function pctToLevel(p){
+  const r=S.rubric;
+  for(const l of LEVELS){if(r[l]!==undefined&&p>=r[l])return l;}
+  return'1';
+}
+function levelBadge(l){
+  const cls={'5+':'5p','5':'5','5-':'5m','4+':'4p','4':'4','4-':'4m','3+':'3p','3':'3','3-':'3m','2+':'2p','2':'2','1':'1'}[l]||'1';
+  return`<span class="level-badge level-${cls}">${l}</span>`;
+}
 function compAssigns(gid,tid,subj,comp){return S.gassign.filter(a=>a.groupId===gid&&a.termId===tid&&a.subj===subj&&a.comp===comp)}
 function getScore(sid,aid){return S.grades[sid+'__'+aid]||null}
 function compAvgDirect(sid,gid,tid,subj,comp){
@@ -1647,7 +1657,8 @@ function renderSheet(){
       <button class="btn btn-danger" onclick="closeSheet();doNewSchoolYear()">Start New Year</button>
     </div>`;
   } else if(sh.type==='rubric'){
-    body=`<div class="sheet-handle"></div><div class="sheet-header">Rubric Scale</div><div class="sheet-body"><div style="font-size:13px;color:var(--text3);margin-bottom:14px">Set the minimum % for each level.</div>${[2,3,4,5,6].map(l=>`<div class="form-group" style="display:flex;align-items:center;gap:12px"><label class="form-label" style="width:80px;margin-bottom:0">${l===6?'Level 5+':'Level '+l}</label><input class="form-input" type="number" min="0" max="100" value="${S.rubric[l]}" oninput="S.rubric[${l}]=parseInt(this.value)||0;save()" style="width:100px"><span style="font-size:13px;color:var(--text3)">%</span></div>`).join('')}</div><div class="btn-row"><button class="btn btn-primary" onclick="closeSheet()">Done</button></div>`;
+    const levels=['5+','5','5-','4+','4','4-','3+','3','3-','2+','2','1'];
+    body=`<div class="sheet-handle"></div><div class="sheet-header">Rubric Scale</div><div class="sheet-body"><div style="font-size:13px;color:var(--text3);margin-bottom:14px">Set the minimum % for each level.</div>${levels.map(l=>`<div class="form-group" style="display:flex;align-items:center;gap:12px">${levelBadge(l)}<input class="form-input" type="number" min="0" max="100" value="${S.rubric[l]??''}" oninput="S.rubric['${l}']=parseInt(this.value)||0;save()" style="width:90px"><span style="font-size:13px;color:var(--text3)">%</span></div>`).join('')}</div><div class="btn-row"><button class="btn btn-primary" onclick="closeSheet()">Done</button></div>`;
   } else if(sh.type==='terms'){
     body=`<div class="sheet-handle"></div><div class="sheet-header">Term Dates</div><div class="sheet-body">${S.terms.map(t=>`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)"><div style="font-size:14px;font-weight:600;margin-bottom:8px">${t.label}</div><div style="display:flex;gap:10px"><div style="flex:1"><label class="form-label">Start</label><input class="form-input" type="date" value="${t.start}" onchange="S.terms.find(x=>x.id==='${t.id}').start=this.value;save()"></div><div style="flex:1"><label class="form-label">End</label><input class="form-input" type="date" value="${t.end}" onchange="S.terms.find(x=>x.id==='${t.id}').end=this.value;save()"></div></div></div>`).join('')}</div><div class="btn-row"><button class="btn btn-primary" onclick="closeSheet()">Done</button></div>`;
   } else if(sh.type==='add-group'||sh.type==='edit-group'){
